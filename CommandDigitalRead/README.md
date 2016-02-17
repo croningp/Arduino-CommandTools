@@ -1,9 +1,16 @@
-## CommandDigitalWrite
+## CommandDigitalRead
 
-Device bonjour id is ```DIGITALWRITE```
+Device bonjour id is ```DIGITALREAD```
 
 ## Incoming
 
 | Command ID | operand(s) | Action |
 |:-:|---|---|
-|```W```| ```bool``` level | Set pin level|
+|```R```| | Request pin state <br> Send back ```S``` command|
+
+
+## Outgoing
+
+| Command ID | operand(s) | Action |
+|:-:|---|---|
+|```S```| ```bool``` status | State of the pin|
