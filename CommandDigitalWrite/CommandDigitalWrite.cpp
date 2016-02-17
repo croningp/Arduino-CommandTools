@@ -176,7 +176,7 @@ void CommandDigitalWrite::write() {
       Serial.print("Setting pin to ");
       Serial.print(pin);
       Serial.print(" to ");
-      Serial.println(status);
+      Serial.println(level);
     #endif
     digitalWrite(pin, level);
   }
