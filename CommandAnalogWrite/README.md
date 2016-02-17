@@ -1,9 +1,9 @@
 ## CommandDigitalWrite
 
-Device bonjour id is ```DIGITALWRITE```
+Device bonjour id is ```ANALOGWRITE```
 
 ## Incoming
 
 | Command ID | operand(s) | Action |
 |:-:|---|---|
-|```W```| ```bool``` level | Set pin level|
+|```W```| ```int``` value [0, 255] | Set pwm value|

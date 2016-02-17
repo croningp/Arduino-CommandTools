@@ -4,13 +4,13 @@
 CommandManager cmdMng;
 
 #include <CommandAnalogWrite.h>
-CommandAnalogWrite dw(10);
+CommandAnalogWrite aw(10);
 
 void setup()
 {
   Serial.begin(115200);
 
-  dw.registerToCommandManager(cmdMng, "A1");
+  aw.registerToCommandManager(cmdMng, "A1");
 
   cmdMng.init();
 }
