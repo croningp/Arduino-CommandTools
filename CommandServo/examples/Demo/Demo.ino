@@ -4,8 +4,8 @@ CommandManager cmdMng;
 
 #include <Servo.h>
 #include <CommandServo.h>
-CommandServo cmdServo1(52);
-CommandServo cmdServo2(53);
+CommandServo cmdServo1(9);
+CommandServo cmdServo2(10);
 
 void setup()
 {
