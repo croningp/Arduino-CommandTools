@@ -167,7 +167,7 @@ void CommandDigitalWrite::wrapper_write()
 
 void CommandDigitalWrite::write() {
   #ifdef COMMANDDIGITALWRITE_DEBUG
-    Serial.println("DigitalWrite received write command");
+    Serial.println("CommandDigitalWrite received write command");
   #endif
 
   bool level = cmdHdl.readBoolArg();

@@ -165,7 +165,7 @@ void CommandDigitalRead::wrapper_read()
 
 void CommandDigitalRead::read() {
   #ifdef COMMANDDIGITALREAD_DEBUG
-    Serial.println("DigitalWrite received read command");
+    Serial.println("CommandDigitalRead received read command");
   #endif
 
   cmdHdl.initCmd();

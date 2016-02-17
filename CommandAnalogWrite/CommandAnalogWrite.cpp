@@ -167,7 +167,7 @@ void CommandAnalogWrite::wrapper_write()
 
 void CommandAnalogWrite::write() {
   #ifdef COMMANDANALOGWRITE_DEBUG
-    Serial.println("DigitalWrite received write command");
+    Serial.println("CommandAnalogWrite received write command");
   #endif
 
   int value = cmdHdl.readInt32Arg();
