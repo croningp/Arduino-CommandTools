@@ -41,12 +41,20 @@
 #define COMMANDLINEARACCELSTEPPER_REQUEST_TARGET "RT"
 #define COMMANDLINEARACCELSTEPPER_REQUEST_POSITION "RP"
 
+#define COMMANDLINEARACCELSTEPPER_REQUEST_SPEED "RIS"
+#define COMMANDLINEARACCELSTEPPER_REQUEST_MAXSPEED "RIMS"
+#define COMMANDLINEARACCELSTEPPER_REQUEST_ACCELERATION "RIA"
+
 //outgoing command
 #define COMMANDLINEARACCELSTEPPER_SWITCH "S"
 #define COMMANDLINEARACCELSTEPPER_MOVING "M"
 #define COMMANDLINEARACCELSTEPPER_DIST "D"
 #define COMMANDLINEARACCELSTEPPER_TARGET "T"
 #define COMMANDLINEARACCELSTEPPER_POSITION "P"
+
+#define COMMANDLINEARACCELSTEPPER_SPEED "IS"
+#define COMMANDLINEARACCELSTEPPER_MAXSPEED "IMS"
+#define COMMANDLINEARACCELSTEPPER_ACCELERATION "IA"
 
 // Uncomment the next line to run the library in debug mode (verbose messages)
 // #define COMMANDLINEARACCELSTEPPER_DEBUG
@@ -79,11 +87,20 @@ class CommandLinearAccelStepperActuator {
     static void wrapper_setSpeed();
     void setSpeed();
 
+    static void wrapper_speed();
+    float speed();
+
     static void wrapper_setMaxSpeed();
     void setMaxSpeed();
 
+    static void wrapper_maxSpeed();
+    float maxSpeed();
+
     static void wrapper_setAcceleration();
     void setAcceleration();
+
+    static void wrapper_acceleration();
+    float acceleration();
 
     static void wrapper_enableAcceleration();
     void enableAcceleration();

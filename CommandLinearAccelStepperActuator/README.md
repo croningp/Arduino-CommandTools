@@ -23,6 +23,10 @@ Device bonjour id is ```LINEARACCELSTEPPER```
 |```RD```| | Request distance to go <br> Send back ```D``` command|
 |```RT```| | Request target position <br> Send back ```T``` command|
 |```RP```| | Request current position <br> Send back ```P``` command|
+|```RIS```| | Request set speed <br> Send back ```IS``` command|
+|```RIMS```| | Request set max speed <br> Send back ```IMS``` command|
+|```RIA```| | Request set acceleration <br> Send back ```IA``` command|
+
 
 ## Outgoing
 
@@ -33,3 +37,6 @@ Device bonjour id is ```LINEARACCELSTEPPER```
 |```D```| ```int``` steps | Steps to target |
 |```T```| ```int``` steps | Target position |
 |```P```| ```int``` steps | Current Position|
+|```IS```| ```float``` stepsPerSecond | Internal speed |
+|```IMS```| ```float``` stepsPerSecond | Internal maxspeed |
+|```IA```| ```float``` stepsPerSecondPerSecond | Internal Acceleration|

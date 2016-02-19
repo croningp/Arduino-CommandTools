@@ -62,6 +62,10 @@ void CommandLinearAccelStepperActuator::init() {
   cmdHdl.addCommand(COMMANDLINEARACCELSTEPPER_REQUEST_TARGET, wrapper_targetPosition);
   cmdHdl.addCommand(COMMANDLINEARACCELSTEPPER_REQUEST_POSITION, wrapper_currentPosition);
 
+  cmdHdl.addCommand(COMMANDLINEARACCELSTEPPER_REQUEST_SPEED, wrapper_speed);
+  cmdHdl.addCommand(COMMANDLINEARACCELSTEPPER_REQUEST_MAXSPEED, wrapper_maxSpeed);
+  cmdHdl.addCommand(COMMANDLINEARACCELSTEPPER_REQUEST_ACCELERATION, wrapper_acceleration);
+
   // a default one is provided in the example
   cmdHdl.setDefaultHandler(wrapper_unrecognized);
 
@@ -200,6 +204,22 @@ void CommandLinearAccelStepperActuator::setSpeed() {
 }
 
 //
+void CommandLinearAccelStepperActuator::wrapper_speed(){
+  // explicitly cast to a pointer to Classname
+  CommandLinearAccelStepperActuator* self = (CommandLinearAccelStepperActuator*) globalCommandLinearAccelStepperActuatorPt2Object;
+  self->speed();
+}
+
+float CommandLinearAccelStepperActuator::speed(){
+  cmdHdl.initCmd();
+  cmdHdl.addCmdString(COMMANDLINEARACCELSTEPPER_SPEED);
+  cmdHdl.addCmdDelim();
+  cmdHdl.addCmdFloat(linearactuator.speed());
+  cmdHdl.addCmdTerm();
+  cmdHdl.sendCmdSerial();
+}
+
+//
 void CommandLinearAccelStepperActuator::wrapper_setMaxSpeed() {
   // explicitly cast to a pointer to Classname
   CommandLinearAccelStepperActuator* self = (CommandLinearAccelStepperActuator*) globalCommandLinearAccelStepperActuatorPt2Object;
@@ -214,6 +234,22 @@ void CommandLinearAccelStepperActuator::setMaxSpeed() {
 }
 
 //
+void CommandLinearAccelStepperActuator::wrapper_maxSpeed(){
+  // explicitly cast to a pointer to Classname
+  CommandLinearAccelStepperActuator* self = (CommandLinearAccelStepperActuator*) globalCommandLinearAccelStepperActuatorPt2Object;
+  self->maxSpeed();
+}
+
+float CommandLinearAccelStepperActuator::maxSpeed(){
+  cmdHdl.initCmd();
+  cmdHdl.addCmdString(COMMANDLINEARACCELSTEPPER_MAXSPEED);
+  cmdHdl.addCmdDelim();
+  cmdHdl.addCmdFloat(linearactuator.maxSpeed());
+  cmdHdl.addCmdTerm();
+  cmdHdl.sendCmdSerial();
+}
+
+//
 void CommandLinearAccelStepperActuator::wrapper_setAcceleration() {
   // explicitly cast to a pointer to Classname
   CommandLinearAccelStepperActuator* self = (CommandLinearAccelStepperActuator*) globalCommandLinearAccelStepperActuatorPt2Object;
@@ -225,6 +261,22 @@ void CommandLinearAccelStepperActuator::setAcceleration() {
   if (cmdHdl.argOk) {
     linearactuator.setAcceleration(stepsPerSecondPerSecond);
   }
+}
+
+//
+void CommandLinearAccelStepperActuator::wrapper_acceleration(){
+  // explicitly cast to a pointer to Classname
+  CommandLinearAccelStepperActuator* self = (CommandLinearAccelStepperActuator*) globalCommandLinearAccelStepperActuatorPt2Object;
+  self->acceleration();
+}
+
+float CommandLinearAccelStepperActuator::acceleration(){
+  cmdHdl.initCmd();
+  cmdHdl.addCmdString(COMMANDLINEARACCELSTEPPER_ACCELERATION);
+  cmdHdl.addCmdDelim();
+  cmdHdl.addCmdFloat(linearactuator.acceleration());
+  cmdHdl.addCmdTerm();
+  cmdHdl.sendCmdSerial();
 }
 
 //
