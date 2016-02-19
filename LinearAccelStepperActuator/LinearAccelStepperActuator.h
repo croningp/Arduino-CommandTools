@@ -43,6 +43,10 @@ class LinearAccelStepperActuator {
     void setMaxSpeed(float stepsPerSecond);
     void setAcceleration(float stepsPerSecondPerSecond);
 
+    float speed();
+    float maxSpeed();
+    float acceleration();
+
     void enableAcceleration();
     void disableAcceleration();
 

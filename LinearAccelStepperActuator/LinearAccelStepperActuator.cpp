@@ -35,7 +35,6 @@ void LinearAccelStepperActuator::init() {
 void LinearAccelStepperActuator::home() {
   homing = true;
   moving = true;
-  setSpeed(lastSetSpeed);
 }
 
 void LinearAccelStepperActuator::update() {
@@ -54,8 +53,6 @@ void LinearAccelStepperActuator::update() {
     }
     if (distanceToGo() == 0) {
       moving = false;
-    } else {
-      moving = true;
     }
   }
 }
@@ -74,6 +71,8 @@ boolean LinearAccelStepperActuator::isMoving() {
 
 void LinearAccelStepperActuator::move(long relativeSteps) {
   stepper->move(relativeSteps);
+  moving = true;
+  // we must set the speed here, because by default accel stepper compute speed from acceleration, here we force it to go to speed, so we have to set back the speed after a move
   if (!accelerationEnabled) {
     setSpeed(lastSetSpeed);
   }
@@ -81,18 +80,23 @@ void LinearAccelStepperActuator::move(long relativeSteps) {
 
 void LinearAccelStepperActuator::moveTo(long absoluteSteps) {
   stepper->moveTo(absoluteSteps);
+  moving = true;
+  // we must set the speed here, because by default accel stepper compute speed from acceleration, here we force it to go to speed, so we have to set back the speed after a moveTo
   if (!accelerationEnabled) {
     setSpeed(lastSetSpeed);
   }
 }
 
 void LinearAccelStepperActuator::stop() {
+  // the stop does not automatically set the current position to goal position because by default the accel stepper library is made to handle acceleration. Thus the servo by default slows down to stop at an undefined position
+  // In speed mode, we want to stop immediately so we move(0) such that our goal position is now current position
+  // we also stop homing
+  // if in acceleration mode, the motor will slow down to complete stop, default behavior of AccelStepper
+  homing = false;
   stepper->stop();
   if (!accelerationEnabled || homing) {
     stepper->move(0);
   }
-  homing = false;
-  moving = false;
 }
 
 long LinearAccelStepperActuator::distanceToGo() {
@@ -123,6 +127,19 @@ void LinearAccelStepperActuator::setMaxSpeed(float stepsPerSecond) {
 void LinearAccelStepperActuator::setAcceleration(float stepsPerSecondPerSecond) {
   stepper->setAcceleration(stepsPerSecondPerSecond);
 }
+
+float LinearAccelStepperActuator::speed(){
+  return stepper->speed();
+}
+
+float LinearAccelStepperActuator::maxSpeed(){
+  return stepper->maxSpeed();
+}
+
+float LinearAccelStepperActuator::acceleration(){
+  return stepper->acceleration();
+}
+
 
 void LinearAccelStepperActuator::enableAcceleration() {
   accelerationEnabled = true;
