@@ -9,13 +9,14 @@
   #include <WProgram.h>
 #endif
 
-#include <avr/wdt.h>
+// removing all stuff related to rest because it does not compile all all boards
+// #include <avr/wdt.h>
 
 #include <CommandHandler.h>
 
 // incoming
 #define COMMANDMANAGER_ISINIT "ISINIT"
-#define COMMANDMANAGER_RESET "RESET"
+// #define COMMANDMANAGER_RESET "RESET"
 
 //outgoing
 #define COMMANDMANAGER_INIT "INIT"
@@ -35,7 +36,8 @@ class CommandManager {
     void init();
     void update();
 
-    static void reset();
+    // removing all stuff related to rest because it does not compile all all boards
+    // static void reset();
 
     static void wrapper_is_init(const char *command, void* pt2Object);
     void is_init(const char *command);

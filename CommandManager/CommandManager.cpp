@@ -29,7 +29,8 @@ void CommandManager::addDevice(const char *command, void* pt2Object, void (*init
 void CommandManager::init() {
 
   // registering built-in behaviors
-  cmdHdl.addCommand(COMMANDMANAGER_RESET, reset);
+  // removing all stuff related to rest because it does not compile all all boards
+  // cmdHdl.addCommand(COMMANDMANAGER_RESET, reset);
   cmdHdl.addRelay(COMMANDMANAGER_ISINIT, wrapper_is_init, this);
   cmdHdl.setDefaultHandler(wrapper_unrecognized, this);
 
@@ -79,12 +80,13 @@ void CommandManager::updateDevices() {
 }
 
 // onReset
-void CommandManager::reset() {
-  wdt_enable(WDTO_15MS);
-  while(1)
-  {
-  }
-}
+// removing all stuff related to rest because it does not compile all all boards
+// void CommandManager::reset() {
+//   wdt_enable(WDTO_15MS);
+//   while(1)
+//   {
+//   }
+// }
 
 // report if is init
 void CommandManager::wrapper_is_init(const char *command, void* pt2Object) {
