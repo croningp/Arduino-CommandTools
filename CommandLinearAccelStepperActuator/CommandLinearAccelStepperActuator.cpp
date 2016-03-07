@@ -183,7 +183,7 @@ void CommandLinearAccelStepperActuator::wrapper_setCurrentPosition() {
 }
 
 void CommandLinearAccelStepperActuator::setCurrentPosition() {
-  long steps = cmdHdl.readInt32Arg();
+  long steps = cmdHdl.readLongArg();
   if (cmdHdl.argOk) {
     linearactuator.setCurrentPosition(steps);
   }
@@ -344,7 +344,7 @@ void CommandLinearAccelStepperActuator::wrapper_moveTo() {
 }
 
 void CommandLinearAccelStepperActuator::moveTo() {
-  long steps = cmdHdl.readInt32Arg();
+  long steps = cmdHdl.readLongArg();
   if (cmdHdl.argOk) {
     linearactuator.moveTo(steps);
   }
@@ -358,7 +358,7 @@ void CommandLinearAccelStepperActuator::wrapper_move() {
 }
 
 void CommandLinearAccelStepperActuator::move() {
-  long steps = cmdHdl.readInt32Arg();
+  long steps = cmdHdl.readLongArg();
   if (cmdHdl.argOk) {
     linearactuator.move(steps);
   }
@@ -418,7 +418,7 @@ void CommandLinearAccelStepperActuator::distanceToGo() {
   cmdHdl.initCmd();
   cmdHdl.addCmdString(COMMANDLINEARACCELSTEPPER_DIST);
   cmdHdl.addCmdDelim();
-  cmdHdl.addCmdInt32(linearactuator.distanceToGo());
+  cmdHdl.addCmdLong(linearactuator.distanceToGo());
   cmdHdl.addCmdTerm();
   cmdHdl.sendCmdSerial();
 }
@@ -434,7 +434,7 @@ void CommandLinearAccelStepperActuator::targetPosition() {
   cmdHdl.initCmd();
   cmdHdl.addCmdString(COMMANDLINEARACCELSTEPPER_TARGET);
   cmdHdl.addCmdDelim();
-  cmdHdl.addCmdInt32(linearactuator.targetPosition());
+  cmdHdl.addCmdLong(linearactuator.targetPosition());
   cmdHdl.addCmdTerm();
   cmdHdl.sendCmdSerial();
 }
@@ -450,7 +450,7 @@ void CommandLinearAccelStepperActuator::currentPosition() {
   cmdHdl.initCmd();
   cmdHdl.addCmdString(COMMANDLINEARACCELSTEPPER_POSITION);
   cmdHdl.addCmdDelim();
-  cmdHdl.addCmdInt32(linearactuator.currentPosition());
+  cmdHdl.addCmdLong(linearactuator.currentPosition());
   cmdHdl.addCmdTerm();
   cmdHdl.sendCmdSerial();
 }

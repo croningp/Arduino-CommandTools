@@ -156,7 +156,7 @@ void CommandAccelStepper::moveTo() {
     Serial.println("Stepper received moveTo command");
   #endif
 
-  long nSteps = cmdHdl.readInt32Arg();
+  long nSteps = cmdHdl.readLongArg();
   if (cmdHdl.argOk) {
     #ifdef COMMANDACCELSTEPPER_DEBUG
       Serial.print("nSteps: ");

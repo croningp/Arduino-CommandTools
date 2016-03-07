@@ -170,7 +170,7 @@ void CommandAnalogWrite::write() {
     Serial.println("CommandAnalogWrite received write command");
   #endif
 
-  int value = cmdHdl.readInt32Arg();
+  int value = cmdHdl.readLongArg();
   if (cmdHdl.argOk) {
     #ifdef COMMANDANALOGWRITE_DEBUG
       Serial.print("Setting pin to ");

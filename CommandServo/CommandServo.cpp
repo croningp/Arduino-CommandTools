@@ -158,7 +158,7 @@ void CommandServo::write() {
     Serial.println("Servo received write command");
   #endif
 
-  int angle = cmdHdl.readInt32Arg();
+  int angle = cmdHdl.readIntArg();
   if (cmdHdl.argOk) {
     #ifdef COMMANDSERVO_DEBUG
       Serial.print("angle received: ");
@@ -196,7 +196,7 @@ void CommandServo::read() {
   cmdHdl.initCmd();
   cmdHdl.addCmdString(COMMANDSERVO_REPORT_POSITION);
   cmdHdl.addCmdDelim();
-  cmdHdl.addCmdInt16(servo.read());
+  cmdHdl.addCmdInt(servo.read());
   cmdHdl.addCmdTerm();
   cmdHdl.sendCmdSerial();
 }

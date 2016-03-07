@@ -171,7 +171,7 @@ void CommandAnalogRead::read() {
   cmdHdl.initCmd();
   cmdHdl.addCmdString(COMMANDANALOGREAD_REPORT_LEVEL);
   cmdHdl.addCmdDelim();
-  cmdHdl.addCmdInt32(analogRead(analogPin));
+  cmdHdl.addCmdLong(analogRead(analogPin));
   cmdHdl.addCmdTerm();
   cmdHdl.sendCmdSerial();
 }
