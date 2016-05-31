@@ -29,9 +29,9 @@ Test your installation by compiling the demo of CommandHandler.
 
 Clone where you want and copy/paste libraries you want to use in the appropriate library folder.
 
-Test your installation by compiling the demo of CommandHandler.
+Test your installation by compiling a demo.
 
-Any symbolic link implementation fro Windows is welcomed.
+Any symbolic link implementation for Windows is welcomed.
 
 
 ## Credit
