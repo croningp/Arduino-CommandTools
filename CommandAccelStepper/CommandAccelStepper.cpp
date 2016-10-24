@@ -1,11 +1,18 @@
 #include "CommandAccelStepper.h"
 
-void* globalCommandLinearAccelStepperActuatorPt2Object;
+void* globalCommandAccelStepperPt2Object;
 
 CommandAccelStepper::CommandAccelStepper(AccelStepper &myStepper, int myEnablePin)
 {
-    LinearAccelStepperActuator my_linearactuator = LinearAccelStepperActuator(myStepper, myEnablePin);
-    linearactuator = my_linearactuator;
+    moving = false;
+
+    stepper = &mystepper;
+    setSpeed(5000);
+    setMaxSpeed(5000);
+    setAcceleration(2000);
+    enableAcceleration();
+
+    enablePin = myEnablePin;
 }
 
 /**
@@ -52,7 +59,7 @@ void CommandAccelStepper::init()
     cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVE, wrapper_move);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_STOP, wrapper_stop);
 
-    cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVING, wrapper_isMoving);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_MOVING, wrapper_isMoving);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_DIST, wrapper_distanceToGo);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_TARGET, wrapper_targetPosition);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_POSITION, wrapper_currentPosition);
@@ -72,9 +79,9 @@ void CommandAccelStepper::init()
 void CommandAccelStepper::wrapper_handleCommand(const char *command, void* pt2Object)
 {
     //Each time the handleCommand is called, it is given the command and the pointer to the instance that should handle it
-    globalCommandLinearAccelStepperActuatorPt2Object = pt2Object;
+    globalCommandAccelStepperPt2Object = pt2Object;
     //Cast it to class name
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
 
     self->handleCommand(command);
 }
@@ -137,7 +144,7 @@ void CommandAccelStepper::update()
 void CommandAccelStepper::wrapper_bonjour()
 {
     //Cast once more...
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->bonjour();
 }
 
@@ -161,7 +168,7 @@ void CommandAccelStepper::bonjour()
 */
 void CommandAccelStepper::wrapper_unrecognized(const char *command)
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->unrecognized(command);
 }
 
@@ -178,7 +185,7 @@ void CommandAccelStepper::unrecognized(const char *command)
 //Sets the current position
 void CommandAccelStepper::wrapper_setCurrentPosition()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->setCurrentPosition();
 }
 
@@ -187,14 +194,14 @@ void CommandAccelStepper::setCurrentPosition()
     long steps = cmdHdl.readLongArg();
     if(cmdHdl.argOk)
     {
-        linearactuator.setCurrentPosition(steps);
+        stepper->setCurrentPosition(steps);
     }
 }
 
 //Sets the speed of the stepper
 void CommandAccelStepper::wrapper_setSpeed()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->setSpeed();
 }
 
@@ -210,7 +217,7 @@ void CommandAccelStepper::setSpeed()
 //Gets the speed
 void CommandAccelStepper::wrapper_speed()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->speed();
 }
 
@@ -227,7 +234,7 @@ float CommandAccelStepper::speed()
 //Sets the max speed of the stepper
 void CommandAccelStepper::wrapper_setMaxSpeed()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->setMaxSpeed();
 }
 
@@ -243,7 +250,7 @@ void CommandAccelStepper::setMaxSpeed()
 //Gets the max speed of the stepper
 void CommandAccelStepper::wrapper_maxSpeed()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->maxSpeed();
 }
 
@@ -260,7 +267,7 @@ float CommandAccelStepper::maxSpeed()
 //Sets the acceleration of the stepper
 void CommandAccelStepper::wrapper_setAcceleration()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->setAcceleration();
 }
 
@@ -276,7 +283,7 @@ void CommandAccelStepper::setAcceleration()
 //Gets the acceleration
 void CommandAccelStepper::wrapper_acceleration()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->acceleration();
 }
 
@@ -293,7 +300,7 @@ float CommandAccelStepper::acceleration()
 //Enables the stepper acceleration
 void CommandAccelStepper::wrapper_enableAcceleration()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->enableAcceleration();
 }
 
@@ -305,7 +312,7 @@ void CommandAccelStepper::enableAcceleration()
 //Disables the stepper acceleration
 void CommandAccelStepper::wrapper_disableAcceleration()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->disableAcceleration();
 }
 
@@ -317,7 +324,7 @@ void CommandAccelStepper::disableAcceleration()
 //Moves the stepper to a location.
 void CommandAccelStepper::wrapper_moveTo()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->moveTo();
 }
 
@@ -333,7 +340,7 @@ void CommandAccelStepper::moveTo()
 //Moves the stepper
 void CommandAccelStepper::wrapper_move()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->move();
 }
 
@@ -349,7 +356,7 @@ void CommandAccelStepper::move()
 //Stops the movement of the stepper
 void CommandAccelStepper::wrapper_stop()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*)globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*)globalCommandAccelStepperPt2Object;
     self->stop();
 }
 
@@ -361,7 +368,7 @@ void CommandAccelStepper::stop()
 //Determines if the stepper is moving
 void CommandAccelStepper::wrapper_isMoving()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->isMoving();
 }
 
@@ -378,7 +385,7 @@ void CommandAccelStepper::isMoving()
 //Determines the distance left to travel
 void CommandAccelStepper::wrapper_distanceToGo()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->distanceToGo();
 }
 
@@ -395,7 +402,7 @@ void CommandAccelStepper::distanceToGo()
 //Gets the target position
 void CommandAccelStepper::wrapper_targetPosition()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->targetPosition();
 }
 
@@ -412,7 +419,7 @@ void CommandAccelStepper::targetPosition()
 //Gets the current position
 void CommandAccelStepper::wrapper_currentPosition()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandLinearAccelStepperActuatorPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->currentPosition();
 }
 

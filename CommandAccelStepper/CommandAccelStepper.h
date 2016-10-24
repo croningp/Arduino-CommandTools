@@ -12,13 +12,11 @@
 #include <CommandHandler.h>
 #include <CommandManager.h>
 
-#include <LinearAccelStepperActuator.h>
-
 #define UNRECOGNIZED_CMD "?"
 #define BONJOUR_CMD "BONJOUR"
 
 //Bonjour ID of the device
-#define COMMANDACCELSTEPPER_BONJOUR_ID "LINEARACCELSTEPPER"
+#define COMMANDACCELSTEPPER_BONJOUR_ID "ACCELSTEPPER"
 
 //Incoming commands
 #define COMMANDACCELSTEPPER_SET_POSITION "SP"
@@ -33,6 +31,7 @@
 #define COMMANDACCELSTEPPER_MOVE "M"
 #define COMMANDACCELSTEPPER_STOP "S"
 
+#define COMMANDACCELSTEPPER_REQUEST_MOVING "RM"
 #define COMMANDACCELSTEPPER_REQUEST_DIST "RD"
 #define COMMANDACCELSTEPPER_REQUEST_TARGET "RT"
 #define COMMANDACCELSTEPPER_REQUEST_POSITION "RP"
@@ -55,16 +54,14 @@
 //Uncomment the next line to run library in debug mode (verbose messages)
 // #define CommandAccelStepper_DEBUG
 
-class CommandAccelStepper
-{
+class CommandAccelStepper {
 public:
-
-    CommandHandler cmdHdl;
-    LinearAccelStepperActuator linearactuator;
-
 
     CommandAccelStepper(AccelStepper &myStepper, int myEnablePin = -1);
 
+    CommandHandler cmdHdl;
+
+    AccelStepper *stepper;
 
     void registerToCommandManager(CommandManager &cmdMgr, const char *command);
 
@@ -79,6 +76,14 @@ public:
 
     static void wrapper_update(void* pt2Object);
     void update();
+
+private:
+
+    static void wrapper_bonjour();
+    void bonjour();
+
+    static void wrapper_unrecognized(const char *command);
+    void unrecognized(const char *command);
 
     static void wrapper_setCurrentPosition();
     void setCurrentPosition();
@@ -128,12 +133,6 @@ public:
     static void wrapper_currentPosition();
     void currentPosition();
 
-private:
-    static void wrapper_bonjour();
-    void bonjour();
-
-    static void wrapper_unrecognized(const char *command);
-    void unrecognized(const char *command);
 };
 
 #endif

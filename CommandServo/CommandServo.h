@@ -44,14 +44,14 @@ class CommandServo {
     static void wrapper_init(void* pt2Object);
     void init();
 
-    static void wrapper_update(void* pt2Object);
-    void update();
-
     static void wrapper_handleCommand(const char *command, void* pt2Object);
     void handleCommand(const char *command);
 
     static void wrapper_setHeader(const char *command,  void* pt2Object);
     void setHeader(const char *command);
+
+    static void wrapper_update(void* pt2Object);
+    void update();
 
   private:
 
