@@ -12,6 +12,8 @@
 #include <CommandHandler.h>
 #include <CommandManager.h>
 
+#include <AccelStepper.h>
+
 #define UNRECOGNIZED_CMD "?"
 #define BONJOUR_CMD "BONJOUR"
 
@@ -19,36 +21,40 @@
 #define COMMANDACCELSTEPPER_BONJOUR_ID "ACCELSTEPPER"
 
 //Incoming commands
-#define COMMANDACCELSTEPPER_SET_POSITION "SP"
-#define COMMANDACCELSTEPPER_SET_SPEED "SS"
-#define COMMANDACCELSTEPPER_SET_MAX_SPEED "SMS"
-#define COMMANDACCELSTEPPER_SET_ACC "SA"
+#define COMMANDACCELSTEPPER_SET_POSITION "SP" //G
+#define COMMANDACCELSTEPPER_SET_SPEED "SS" //G
+#define COMMANDACCELSTEPPER_SET_MAX_SPEED "SMS"//G
+#define COMMANDACCELSTEPPER_SET_ACC "SA" //G
 
 #define COMMANDACCELSTEPPER_ENABLE_ACC "EA"
 #define COMMANDACCELSTEPPER_DISABLE_ACC "DA"
 
-#define COMMANDACCELSTEPPER_MOVE_TO "MT"
-#define COMMANDACCELSTEPPER_MOVE "M"
-#define COMMANDACCELSTEPPER_STOP "S"
+#define COMMANDACCELSTEPPER_MOVE_TO "MT" //G
+#define COMMANDACCELSTEPPER_MOVE "M" //G
+#define COMMANDACCELSTEPPER_STOP "S" //G
+#define COMMANDACCELSTEPPER_RUN "R"
+#define COMMANDACCELSTEPPER_RUN_SPEED "RS"
+#define COMMANDACCELSTEPPER_RUN_TO_POSITION "RTP"
+#define COMMANDACCELSTEPPER_RUN_SPEED_TO_POSITION "RSTP"
+#define COMMANDACCELSTEPPER_RUN_TO_NEW_POSITION "RTNP"
 
+#define COMMANDACCELSTEPPER_REQUEST_DIST "RD" //G
+#define COMMANDACCELSTEPPER_REQUEST_TARGET "RT" //G
+#define COMMANDACCELSTEPPER_REQUEST_POSITION "RP" //G
+
+#define COMMANDACCELSTEPPER_REQUEST_SPEED "RIS" //G
+#define COMMANDACCELSTEPPER_REQUEST_MAXSPEED "RIMS" //G
+#define COMMANDACCELSTEPPER_REQUEST_ACCELERATION "RIA" //G
 #define COMMANDACCELSTEPPER_REQUEST_MOVING "RM"
-#define COMMANDACCELSTEPPER_REQUEST_DIST "RD"
-#define COMMANDACCELSTEPPER_REQUEST_TARGET "RT"
-#define COMMANDACCELSTEPPER_REQUEST_POSITION "RP"
-
-#define COMMANDACCELSTEPPER_REQUEST_SPEED "RIS"
-#define COMMANDACCELSTEPPER_REQUEST_MAXSPEED "RIMS"
-#define COMMANDACCELSTEPPER_REQUEST_ACCELERATION "RIA"
 
 //outgoing command
-#define COMMANDACCELSTEPPER_MOVING "M"
-#define COMMANDACCELSTEPPER_DIST "D"
-#define COMMANDACCELSTEPPER_TARGET "T"
-#define COMMANDACCELSTEPPER_POSITION "P"
+#define COMMANDACCELSTEPPER_DIST "D"//G
+#define COMMANDACCELSTEPPER_TARGET "T" //G
+#define COMMANDACCELSTEPPER_POSITION "P" //G
 
-#define COMMANDACCELSTEPPER_SPEED "IS"
-#define COMMANDACCELSTEPPER_MAXSPEED "IMS"
-#define COMMANDACCELSTEPPER_ACCELERATION "IA"
+#define COMMANDACCELSTEPPER_SPEED "IS" //G
+#define COMMANDACCELSTEPPER_MAXSPEED "IMS"//G
+#define COMMANDACCELSTEPPER_ACCELERATION "IA" //G
 
 
 //Uncomment the next line to run library in debug mode (verbose messages)
@@ -59,9 +65,9 @@ public:
 
     CommandAccelStepper(AccelStepper &myStepper, int myEnablePin = -1);
 
-    CommandHandler cmdHdl;
-
     AccelStepper *stepper;
+
+    CommandHandler cmdHdl;
 
     void registerToCommandManager(CommandManager &cmdMgr, const char *command);
 
@@ -85,14 +91,17 @@ private:
     static void wrapper_unrecognized(const char *command);
     void unrecognized(const char *command);
 
-    static void wrapper_setCurrentPosition();
-    void setCurrentPosition();
+    static void wrapper_moveTo();
+    void moveTo();
 
-    static void wrapper_setSpeed();
-    void setSpeed();
+    static void wrapper_move();
+    void move();
 
-    static void wrapper_speed();
-    float speed();
+    static void wrapper_run();
+    boolean run();
+
+    static void wrapper_runSpeed();
+    boolean runSpeed();
 
     static void wrapper_setMaxSpeed();
     void setMaxSpeed();
@@ -106,33 +115,53 @@ private:
     static void wrapper_acceleration();
     float acceleration();
 
+    static void wrapper_setSpeed();
+    void setSpeed();
+
+    static void wrapper_speed();
+    float speed();
+
+    static void wrapper_distanceToGo();
+    long distanceToGo();
+
+    static void wrapper_targetPosition();
+    long targetPosition();
+
+    static void wrapper_currentPosition();
+    long currentPosition();
+
+    static void wrapper_setCurrentPosition();
+    void setCurrentPosition();
+
+    static void wrapper_runToPosition();
+    void runToPosition();
+
+    static void wrapper_runSpeedToPosition();
+    boolean runSpeedToPosition();
+
+    static void wrapper_runToNewPosition();
+    void runToNewPosition();
+
+    static void wrapper_stop();
+    void stop();
+
+/*******************************************/
+    static void wrapper_isMoving();
+    boolean isMoving();
+
+    static void wrapper_getMoving();
+    boolean getMoving();
+
     static void wrapper_enableAcceleration();
     void enableAcceleration();
 
     static void wrapper_disableAcceleration();
     void disableAcceleration();
 
-    static void wrapper_moveTo();
-    void moveTo();
-
-    static void wrapper_move();
-    void move();
-
-    static void wrapper_stop();
-    void stop();
-
-    static void wrapper_isMoving();
-    void isMoving();
-
-    static void wrapper_distanceToGo();
-    void distanceToGo();
-
-    static void wrapper_targetPosition();
-    void targetPosition();
-
-    static void wrapper_currentPosition();
-    void currentPosition();
-
+    boolean moving;
+    boolean accelerationEnabled;
+    float lastSetSpeed;
+    /*******************************************/
 };
 
 #endif

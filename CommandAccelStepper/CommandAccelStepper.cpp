@@ -6,13 +6,14 @@ CommandAccelStepper::CommandAccelStepper(AccelStepper &myStepper, int myEnablePi
 {
     moving = false;
 
-    stepper = &mystepper;
-    setSpeed(5000);
-    setMaxSpeed(5000);
-    setAcceleration(2000);
+    stepper = &myStepper;
+
+    stepper->setSpeed(5000);
+    stepper->setMaxSpeed(5000);
+    stepper->setAcceleration(2000);
     enableAcceleration();
 
-    enablePin = myEnablePin;
+    stepper->setEnablePin(myEnablePin);
 }
 
 /**
@@ -41,7 +42,6 @@ void CommandAccelStepper::init()
     #endif
 
     //do device init first
-    linearactuator.init();
 
     //Register all commands.
     //ALL OF THEM
@@ -58,11 +58,16 @@ void CommandAccelStepper::init()
     cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVE_TO, wrapper_moveTo);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVE, wrapper_move);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_STOP, wrapper_stop);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN,  wrapper_run);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_TO_POSITION, wrapper_runToPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_TO_NEW_POSITION, wrapper_runToNewPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_SPEED, wrapper_runSpeed);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_SPEED_TO_POSITION, wrapper_runSpeedToPosition);
 
-    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_MOVING, wrapper_isMoving);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_DIST, wrapper_distanceToGo);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_TARGET, wrapper_targetPosition);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_POSITION, wrapper_currentPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_MOVING, wrapper_isMoving);
 
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_SPEED, wrapper_speed);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_MAXSPEED, wrapper_maxSpeed);
@@ -130,9 +135,19 @@ void CommandAccelStepper::wrapper_update(void* pt2Object)
 
 void CommandAccelStepper::update()
 {
-    //Do what needs to be done. Non-blocking things
-    //Should be fast!!
-    linearactuator.update();
+    if(accelerationEnabled)
+    {
+        stepper->run();
+    }
+    else
+    {
+        stepper->runSpeedToPosition();
+    }
+
+    if(stepper->distanceToGo() == 0)
+    {
+        moving = false;
+    }
 }
 
 /**
@@ -182,6 +197,375 @@ void CommandAccelStepper::unrecognized(const char *command)
     cmdHdl.sendCmdSerial();
 }
 
+//Moves the stepper to a specific location
+void CommandAccelStepper::wrapper_moveTo()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->moveTo();
+}
+
+void CommandAccelStepper::moveTo()
+{
+    long steps = cmdHdl.readLongArg();
+
+    if(cmdHdl.argOk)
+    {
+        stepper->moveTo(steps);
+        moving = true;
+
+        if(!accelerationEnabled)
+        {
+            stepper->setSpeed(lastSetSpeed);
+        }
+    }
+}
+
+//Moves the stepper x number of steps
+void CommandAccelStepper::wrapper_move()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->move();
+}
+
+void CommandAccelStepper::move()
+{
+    long steps = cmdHdl.readLongArg();
+
+    if(cmdHdl.argOk)
+    {
+        stepper->move(steps);
+        moving = true;
+
+        if(!accelerationEnabled)
+        {
+            stepper->setSpeed(lastSetSpeed);
+        }
+    }
+}
+
+//Polls the stepper and step it if a step is due. Uses accelerations/decellerations to achieve position
+void CommandAccelStepper::wrapper_run()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->run();
+}
+
+boolean CommandAccelStepper::run()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdBool(stepper->run());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Polls the stepper and stetp if a step is due. Uses constant speed as set by setSpeed()
+void CommandAccelStepper::wrapper_runSpeed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->runSpeed();
+}
+
+boolean CommandAccelStepper::runSpeed()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_SPEED);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdBool(stepper->runSpeed());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Sets the Maximum speed of the stepper
+void CommandAccelStepper::wrapper_setMaxSpeed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->setMaxSpeed();
+}
+
+void CommandAccelStepper::setMaxSpeed()
+{
+    float stepsPerSec = cmdHdl.readFloatArg();
+
+    if(cmdHdl.argOk)
+    {
+        stepper->setMaxSpeed(stepsPerSec);
+    }
+}
+
+//Returns the max speed of the stepper
+void CommandAccelStepper::wrapper_maxSpeed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->maxSpeed();
+}
+
+float CommandAccelStepper::maxSpeed()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_MAXSPEED);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdFloat(stepper->maxSpeed());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Sets the acceleration for the stepper
+void CommandAccelStepper::wrapper_setAcceleration()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->setAcceleration();
+}
+
+void CommandAccelStepper::setAcceleration()
+{
+    float stepsPerSecPerSec = cmdHdl.readFloatArg();
+
+    if(cmdHdl.argOk)
+    {
+        stepper->setAcceleration(stepsPerSecPerSec);
+    }
+}
+
+//Returns the acceleration of the stepper
+void CommandAccelStepper::wrapper_acceleration()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->acceleration();
+}
+
+float CommandAccelStepper::acceleration()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_ACCELERATION);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdFloat(stepper->acceleration());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//sets the speed of the stepper
+void CommandAccelStepper::wrapper_setSpeed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->setSpeed();
+}
+
+void CommandAccelStepper::setSpeed()
+{
+    float stepsPerSec = cmdHdl.readFloatArg();
+
+    if(cmdHdl.argOk)
+    {
+        lastSetSpeed = stepsPerSec;
+        stepper->setSpeed(lastSetSpeed);
+    }
+}
+
+//Returns the speed of the stepper
+void CommandAccelStepper::wrapper_speed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->speed();
+}
+
+float CommandAccelStepper::speed()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_SPEED);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdFloat(stepper->speed());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Returns the distance between the target position and current posiiton
+void CommandAccelStepper::wrapper_distanceToGo()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->distanceToGo();
+}
+
+long CommandAccelStepper::distanceToGo()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_DIST);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdLong(stepper->distanceToGo());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//returns the most recently set target position#
+void CommandAccelStepper::wrapper_targetPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->targetPosition();
+}
+
+long CommandAccelStepper::targetPosition()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_TARGET);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdLong(stepper->targetPosition());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//returns the current stepper position
+void CommandAccelStepper::wrapper_currentPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->currentPosition();
+}
+
+long CommandAccelStepper::currentPosition()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_POSITION);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdLong(stepper->currentPosition());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Sets the current position of the stepper
+void CommandAccelStepper::wrapper_setCurrentPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->setCurrentPosition();
+}
+
+void CommandAccelStepper::setCurrentPosition()
+{
+    long steps = cmdHdl.readLongArg();
+    if(cmdHdl.argOk)
+    {
+        stepper->setCurrentPosition(steps);
+    }
+}
+
+//Moves the stepper (using acceleration) to the target position and blocks until it is there
+void CommandAccelStepper::wrapper_runToPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->runToPosition();
+}
+
+void CommandAccelStepper::runToPosition()
+{
+    /*
+    //TODO FIX
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_TO_POSITION);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+    */
+    stepper->runToPosition();
+}
+
+//moves the stepper at sleected speed until the target position
+void CommandAccelStepper::wrapper_runSpeedToPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->runSpeedToPosition();
+}
+
+boolean CommandAccelStepper::runSpeedToPosition()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_SPEED_TO_POSITION);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdBool(stepper->runSpeedToPosition());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Moves the stepper (With acceleration) to the new target pos.
+void CommandAccelStepper::wrapper_runToNewPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->runToNewPosition();
+}
+
+void CommandAccelStepper::runToNewPosition()
+{
+    long steps = cmdHdl.readLongArg();
+    if(cmdHdl.argOk)
+    {
+        stepper->runToNewPosition(steps);
+    }
+}
+
+//Stops the stepper as quickly as possible
+void CommandAccelStepper::wrapper_stop()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->stop();
+}
+
+void CommandAccelStepper::stop()
+{
+    stepper->stop();
+}
+
+/**********************NEW*******************************************/
+
+//Determines if the stepper is moving
+void CommandAccelStepper::wrapper_getMoving()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->getMoving();
+}
+
+boolean CommandAccelStepper::getMoving() {return moving;}
+
+void CommandAccelStepper::wrapper_isMoving()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->isMoving();
+}
+
+boolean CommandAccelStepper::isMoving()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_REQUEST_MOVING);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdBool(getMoving());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Enables acceleration
+void CommandAccelStepper::wrapper_enableAcceleration()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->enableAcceleration();
+}
+
+void CommandAccelStepper::enableAcceleration()
+{
+    accelerationEnabled = true;
+}
+
+//Disables acceleration
+void CommandAccelStepper::wrapper_disableAcceleration()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->disableAcceleration();
+}
+
+void CommandAccelStepper::disableAcceleration()
+{
+    accelerationEnabled = false;
+}
+
+/************************************END********************************************/
+
+/*
 //Sets the current position
 void CommandAccelStepper::wrapper_setCurrentPosition()
 {
@@ -198,23 +582,23 @@ void CommandAccelStepper::setCurrentPosition()
     }
 }
 
-//Sets the speed of the stepper
+//Sets the speed
 void CommandAccelStepper::wrapper_setSpeed()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->setSpeed();
 }
 
-void CommandAccelStepper::setSpeed()
+float CommandAccelStepper::setSpeed()
 {
     float stepsPerSec = cmdHdl.readFloatArg();
     if(cmdHdl.argOk)
     {
-        linearactuator.setSpeed(stepsPerSec);
+        stepper->setSpeed(stepsPerSec);
     }
 }
 
-//Gets the speed
+//Returns the speed
 void CommandAccelStepper::wrapper_speed()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -226,12 +610,12 @@ float CommandAccelStepper::speed()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_SPEED);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdFloat(linearactuator.speed());
+    cmdHdl.addCmdFloat(stepper->speed());
     cmdHdl.addCmdTerm();
-    cmdHdl.sendCmdSerial();
+    cmmdHdl.sendCmdSerial();
 }
 
-//Sets the max speed of the stepper
+//Sets the maximum speed of the Stepper
 void CommandAccelStepper::wrapper_setMaxSpeed()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -243,11 +627,11 @@ void CommandAccelStepper::setMaxSpeed()
     float stepsPerSec = cmdHdl.readFloatArg();
     if(cmdHdl.argOk)
     {
-        linearactuator.setMaxSpeed(stepsPerSec);
+        stepper->setMaxSpeed(stepsPerSec);
     }
 }
 
-//Gets the max speed of the stepper
+//Returns the max speed of the stepper
 void CommandAccelStepper::wrapper_maxSpeed()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -259,7 +643,7 @@ float CommandAccelStepper::maxSpeed()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_MAXSPEED);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdFloat(linearactuator.maxSpeed());
+    cmdHdl.addCmdFloat(stepper->maxSpeed());
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
@@ -276,11 +660,11 @@ void CommandAccelStepper::setAcceleration()
     float stepsPerSecPerSec = cmdHdl.readFloatArg();
     if(cmdHdl.argOk)
     {
-        linearactuator.setAcceleration(stepsPerSecPerSec);
+        stepper->setAcceleration(stepsPerSecPerSec);
     }
 }
 
-//Gets the acceleration
+//Gets the Acceleration of the stepper
 void CommandAccelStepper::wrapper_acceleration()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -292,13 +676,13 @@ float CommandAccelStepper::acceleration()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_ACCELERATION);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdFloat(linearactuator.acceleration());
+    cmdHdl.addCmdFloat(stepper->acceleration());
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
 
-//Enables the stepper acceleration
-void CommandAccelStepper::wrapper_enableAcceleration()
+//Enables Acceleration mode in the stepper
+void CommandAcelStepper::wrapper_enableAcceleration()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->enableAcceleration();
@@ -306,10 +690,10 @@ void CommandAccelStepper::wrapper_enableAcceleration()
 
 void CommandAccelStepper::enableAcceleration()
 {
-    linearactuator.enableAcceleration();
+    stepper->enableAcceleration();
 }
 
-//Disables the stepper acceleration
+//Disables acceleration on the stepper
 void CommandAccelStepper::wrapper_disableAcceleration()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -318,10 +702,10 @@ void CommandAccelStepper::wrapper_disableAcceleration()
 
 void CommandAccelStepper::disableAcceleration()
 {
-    linearactuator.disableAcceleration();
+    stepper->disableAcceleration();
 }
 
-//Moves the stepper to a location.
+//Moves the stepper to a specific location
 void CommandAccelStepper::wrapper_moveTo()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -333,11 +717,12 @@ void CommandAccelStepper::moveTo()
     long steps = cmdHdl.readLongArg();
     if(cmdHdl.argOk)
     {
-        linearactuator.moveTo(steps);
+        stepper->moveTo(steps);
     }
 }
 
-//Moves the stepper
+
+//Moves the stepper a number of steps
 void CommandAccelStepper::wrapper_move()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -349,20 +734,20 @@ void CommandAccelStepper::move()
     long steps = cmdHdl.readLongArg();
     if(cmdHdl.argOk)
     {
-        linearactuator.move(steps);
+        stepper->move(steps);
     }
 }
 
-//Stops the movement of the stepper
+//Stops the stepper from executing its current Command
 void CommandAccelStepper::wrapper_stop()
 {
-    CommandAccelStepper* self = (CommandAccelStepper*)globalCommandAccelStepperPt2Object;
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
     self->stop();
 }
 
 void CommandAccelStepper::stop()
 {
-    linearactuator.stop();
+    stepper->stop();
 }
 
 //Determines if the stepper is moving
@@ -377,7 +762,7 @@ void CommandAccelStepper::isMoving()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_MOVING);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdBool(linearactuator.isMoving());
+    cmdHdl.addCmdBool(stepper->isMoving());
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
@@ -394,7 +779,7 @@ void CommandAccelStepper::distanceToGo()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_DIST);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdLong(linearactuator.distanceToGo());
+    cmdHdl.addCmdLong(stepper->distanceToGo());
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
@@ -411,12 +796,11 @@ void CommandAccelStepper::targetPosition()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_TARGET);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdLong(linearactuator.targetPosition());
+    cmdHdl.addCmdLong(stepper->targetPosiiton());
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
 
-//Gets the current position
 void CommandAccelStepper::wrapper_currentPosition()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -428,7 +812,8 @@ void CommandAccelStepper::currentPosition()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_POSITION);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdLong(linearactuator.currentPosition());
+    cmdHdl.addCmdLong(stepper->currentPosition());
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
+*/
