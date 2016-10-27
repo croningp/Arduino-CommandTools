@@ -58,7 +58,7 @@
 
 
 //Uncomment the next line to run library in debug mode (verbose messages)
-// #define CommandAccelStepper_DEBUG
+// #define COMMANDACCELSTEPPER_DEBUG
 
 class CommandAccelStepper {
 public:

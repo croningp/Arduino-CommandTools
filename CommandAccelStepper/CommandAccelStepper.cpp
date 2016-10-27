@@ -37,7 +37,7 @@ void CommandAccelStepper::wrapper_init(void* pt2Object)
 
 void CommandAccelStepper::init()
 {
-    #ifndef CommandAccelStepper_DEBUG
+    #ifdef COMMANDACCELSTEPPER_DEBUG
         Serial.println("Init CommandAccelStepper");
     #endif
 
@@ -93,7 +93,7 @@ void CommandAccelStepper::wrapper_handleCommand(const char *command, void* pt2Ob
 
 void CommandAccelStepper::handleCommand(const char *command)
 {
-    #ifndef CommandAccelStepper_DEBUG
+    #ifdef COMMANDACCELSTEPPER_DEBUG
         Serial.print("Device received: ");
         Serial.println(command);
     #endif
@@ -114,7 +114,7 @@ void CommandAccelStepper::wrapper_setHeader(const char *cmdHeader, void* pt2Obje
 
 void CommandAccelStepper::setHeader(const char *cmdHeader)
 {
-    #ifndef CommandAccelStepper_DEBUG
+    #ifdef COMMANDACCELSTEPPER_DEBUG
         Serial.print("Set Header CommandAccelStepper to ");
         Serial.println(cmdHeader);
     #endif
@@ -165,7 +165,7 @@ void CommandAccelStepper::wrapper_bonjour()
 
 void CommandAccelStepper::bonjour()
 {
-    #ifndef CommandAccelStepper_DEBUG
+    #ifdef COMMANDACCELSTEPPER_DEBUG
         Serial.println("Device received bonjour command");
     #endif
 
