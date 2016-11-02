@@ -518,15 +518,6 @@ boolean CommandAccelStepper::stop()
 
 /**********************NEW*******************************************/
 
-//Determines if the stepper is moving
-void CommandAccelStepper::wrapper_getMoving()
-{
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-    self->getMoving();
-}
-
-boolean CommandAccelStepper::getMoving() {return moving;}
-
 void CommandAccelStepper::wrapper_isMoving()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -538,7 +529,7 @@ boolean CommandAccelStepper::isMoving()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_MOVING);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdBool(getMoving());
+    cmdHdl.addCmdBool(moving);
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
