@@ -51,6 +51,7 @@
 #define COMMANDACCELSTEPPER_DIST "D"//G
 #define COMMANDACCELSTEPPER_TARGET "T" //G
 #define COMMANDACCELSTEPPER_POSITION "P" //G
+#define COMMANDACCELSTEPPER_MOVING "M"
 
 #define COMMANDACCELSTEPPER_SPEED "IS" //G
 #define COMMANDACCELSTEPPER_MAXSPEED "IMS"//G
@@ -143,7 +144,7 @@ private:
     void runToNewPosition();
 
     static void wrapper_stop();
-    void stop();
+    boolean stop();
 
 /*******************************************/
     static void wrapper_isMoving();
