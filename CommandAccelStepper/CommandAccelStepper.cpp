@@ -58,11 +58,6 @@ void CommandAccelStepper::init()
     cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVE_TO, wrapper_moveTo);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVE, wrapper_move);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_STOP, wrapper_stop);
-    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN,  wrapper_run);
-    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_TO_POSITION, wrapper_runToPosition);
-    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_TO_NEW_POSITION, wrapper_runToNewPosition);
-    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_SPEED, wrapper_runSpeed);
-    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_SPEED_TO_POSITION, wrapper_runSpeedToPosition);
 
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_DIST, wrapper_distanceToGo);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_TARGET, wrapper_targetPosition);
@@ -246,40 +241,6 @@ void CommandAccelStepper::move()
     }
 }
 
-//Polls the stepper and step it if a step is due. Uses accelerations/decellerations to achieve position
-void CommandAccelStepper::wrapper_run()
-{
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-    self->run();
-}
-
-boolean CommandAccelStepper::run()
-{
-    cmdHdl.initCmd();
-    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN);
-    cmdHdl.addCmdDelim();
-    cmdHdl.addCmdBool(stepper->run());
-    cmdHdl.addCmdTerm();
-    cmdHdl.sendCmdSerial();
-}
-
-//Polls the stepper and stetp if a step is due. Uses constant speed as set by setSpeed()
-void CommandAccelStepper::wrapper_runSpeed()
-{
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-    self->runSpeed();
-}
-
-boolean CommandAccelStepper::runSpeed()
-{
-    cmdHdl.initCmd();
-    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_SPEED);
-    cmdHdl.addCmdDelim();
-    cmdHdl.addCmdBool(stepper->runSpeed());
-    cmdHdl.addCmdTerm();
-    cmdHdl.sendCmdSerial();
-}
-
 //Sets the Maximum speed of the stepper
 void CommandAccelStepper::wrapper_setMaxSpeed()
 {
@@ -450,59 +411,6 @@ void CommandAccelStepper::setCurrentPosition()
     }
 }
 
-//Moves the stepper (using acceleration) to the target position and blocks until it is there
-void CommandAccelStepper::wrapper_runToPosition()
-{
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-    self->runToPosition();
-}
-
-void CommandAccelStepper::runToPosition()
-{
-    /*
-    //TODO FIX
-    cmdHdl.initCmd();
-    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_TO_POSITION);
-    cmdHdl.addCmdDelim();
-    cmdHdl.addCmdTerm();
-    cmdHdl.sendCmdSerial();
-    */
-    stepper->runToPosition();
-}
-
-//moves the stepper at sleected speed until the target position
-void CommandAccelStepper::wrapper_runSpeedToPosition()
-{
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-    self->runSpeedToPosition();
-}
-
-boolean CommandAccelStepper::runSpeedToPosition()
-{
-    cmdHdl.initCmd();
-    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_SPEED_TO_POSITION);
-    cmdHdl.addCmdDelim();
-    cmdHdl.addCmdBool(stepper->runSpeedToPosition());
-    cmdHdl.addCmdTerm();
-    cmdHdl.sendCmdSerial();
-}
-
-//Moves the stepper (With acceleration) to the new target pos.
-void CommandAccelStepper::wrapper_runToNewPosition()
-{
-    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-    self->runToNewPosition();
-}
-
-void CommandAccelStepper::runToNewPosition()
-{
-    long steps = cmdHdl.readLongArg();
-    if(cmdHdl.argOk)
-    {
-        stepper->runToNewPosition(steps);
-    }
-}
-
 //Stops the stepper as quickly as possible
 void CommandAccelStepper::wrapper_stop()
 {
@@ -510,13 +418,11 @@ void CommandAccelStepper::wrapper_stop()
     self->stop();
 }
 
-boolean CommandAccelStepper::stop()
+void CommandAccelStepper::stop()
 {
     stepper->stop();
-    return true;
 }
 
-/**********************NEW*******************************************/
 
 void CommandAccelStepper::wrapper_isMoving()
 {
@@ -524,7 +430,7 @@ void CommandAccelStepper::wrapper_isMoving()
     self->isMoving();
 }
 
-boolean CommandAccelStepper::isMoving()
+void CommandAccelStepper::isMoving()
 {
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_MOVING);
@@ -557,5 +463,3 @@ void CommandAccelStepper::disableAcceleration()
 {
     accelerationEnabled = false;
 }
-
-/************************************END********************************************/
