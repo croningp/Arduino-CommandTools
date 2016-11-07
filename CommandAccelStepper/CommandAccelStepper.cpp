@@ -60,7 +60,7 @@ void CommandAccelStepper::init()
     cmdHdl.addCommand(COMMANDACCELSTEPPER_STOP, wrapper_stop);
 
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_DIST, wrapper_distanceToGo);
-    cmdHdl.addCommand(COMMANDACCELSTEPPER_TARGET, wrapper_targetPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_TARGET, wrapper_targetPosition);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_POSITION, wrapper_currentPosition);
     cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_MOVING, wrapper_isMoving);
 
@@ -128,6 +128,9 @@ void CommandAccelStepper::wrapper_update(void* pt2Object)
     self->update();
 }
 
+/*
+* BUGGED: DOES NOT REVERT DIRECTION APPROPRIATELY
+*/
 void CommandAccelStepper::update()
 {
     if(accelerationEnabled)
@@ -418,6 +421,7 @@ void CommandAccelStepper::wrapper_stop()
 void CommandAccelStepper::stop()
 {
     stepper->stop();
+    return true;
 }
 
 
@@ -427,7 +431,7 @@ void CommandAccelStepper::wrapper_isMoving()
     self->isMoving();
 }
 
-boolean CommandAccelStepper::isMoving()
+void CommandAccelStepper::isMoving()
 {
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDACCELSTEPPER_MOVING);
@@ -460,5 +464,3 @@ void CommandAccelStepper::disableAcceleration()
 {
     accelerationEnabled = false;
 }
-
-/************************************END********************************************/

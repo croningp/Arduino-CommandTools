@@ -93,12 +93,6 @@ private:
     static void wrapper_move();
     void move();
 
-    static void wrapper_run();
-    boolean run();
-
-    static void wrapper_runSpeed();
-    boolean runSpeed();
-
     static void wrapper_setMaxSpeed();
     void setMaxSpeed();
 
@@ -132,9 +126,8 @@ private:
     static void wrapper_stop();
     void stop();
 
-/*******************************************/
     static void wrapper_isMoving();
-    boolean isMoving();
+    void isMoving();
 
     static void wrapper_enableAcceleration();
     void enableAcceleration();
@@ -145,7 +138,6 @@ private:
     boolean moving;
     boolean accelerationEnabled;
     float lastSetSpeed;
-    /*******************************************/
 };
 
 #endif
