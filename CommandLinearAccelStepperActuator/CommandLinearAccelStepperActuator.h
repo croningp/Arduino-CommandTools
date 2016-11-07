@@ -61,6 +61,7 @@
 
 class CommandLinearAccelStepperActuator {
   public:
+    
     CommandLinearAccelStepperActuator(AccelStepper &mystepper, int myHomeSwitchPin, int myEnablePin=-1);
 
     CommandHandler cmdHdl;
@@ -80,6 +81,14 @@ class CommandLinearAccelStepperActuator {
 
     static void wrapper_update(void* pt2Object);
     void update();
+
+  private:
+
+    static void wrapper_bonjour();
+    void bonjour();
+
+    static void wrapper_unrecognized(const char *command);
+    void unrecognized(const char *command);
 
     static void wrapper_setCurrentPosition();
     void setCurrentPosition();
@@ -140,14 +149,6 @@ class CommandLinearAccelStepperActuator {
 
     static void wrapper_currentPosition();
     void currentPosition();
-
-  private:
-
-    static void wrapper_bonjour();
-    void bonjour();
-
-    static void wrapper_unrecognized(const char *command);
-    void unrecognized(const char *command);
 };
 
 #endif

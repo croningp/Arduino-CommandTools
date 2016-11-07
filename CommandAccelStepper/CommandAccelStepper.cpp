@@ -1,172 +1,561 @@
-
 #include "CommandAccelStepper.h"
 
 void* globalCommandAccelStepperPt2Object;
 
-CommandAccelStepper::CommandAccelStepper(uint8_t interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable) {
+CommandAccelStepper::CommandAccelStepper(AccelStepper &myStepper, int myEnablePin)
+{
+    moving = false;
 
-  AccelStepper mystepper(interface, pin1,pin2, pin3, pin4, enable);
-  stepper = mystepper;
+    stepper = &myStepper;
+
+    stepper->setSpeed(5000);
+    stepper->setMaxSpeed(5000);
+    stepper->setAcceleration(2000);
+    enableAcceleration();
+
+    stepper->setEnablePin(myEnablePin);
 }
 
 /**
-* register to a CommandManager
+* Register to Command Manager
 */
-void CommandAccelStepper::registerToCommandManager(CommandManager &cmdMng, const char *command) {
-  cmdMng.addDevice(command, this, wrapper_init, wrapper_handleCommand, wrapper_setHeader, wrapper_update);
-}
-
-
-/**
-* init function to be run one in setup
-* we initialize all the callback here
-*/
-void CommandAccelStepper::wrapper_init(void* pt2Object) {
-  // explicitly cast to a pointer to Classname
-  CommandAccelStepper* self = (CommandAccelStepper*) pt2Object;
-  self->init();
-}
-
-void CommandAccelStepper::init() {
-  #ifdef COMMANDACCELSTEPPER_DEBUG
-    Serial.println("Init CommandStepper");
-  #endif
-
-  stepper.setMaxSpeed(5000);
-  stepper.setAcceleration(2000);
-
-  // here register all the commands
-  // the following is mandatory for the bonjour behavior
-  cmdHdl.addCommand("BONJOUR", wrapper_bonjour);
-  cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVE_TO, wrapper_moveTo);
-
-  // the default unrecognized, keep it
-  cmdHdl.setDefaultHandler(wrapper_unrecognized);
+void CommandAccelStepper::registerToCommandManager(CommandManager &cmdMgr, const char *command)
+{
+    cmdMgr.addDevice(command, this, wrapper_init, wrapper_handleCommand, wrapper_setHeader, wrapper_update);
 }
 
 /**
-* message are redicted here
+* Init function to be run once in setup.
+* We initialise all the callback here
+* Wrapper is used by CommandManager
 */
-void CommandAccelStepper::wrapper_handleCommand(const char *command, void* pt2Object) {
-  // each time the handleCommand is called, it is given the command and the pointer to the instance that should handle it
-  globalCommandAccelStepperPt2Object = pt2Object;
-  // explicitly cast to a pointer to Classname
-  CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-
-  self->handleCommand(command);
+void CommandAccelStepper::wrapper_init(void* pt2Object)
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) pt2Object;
+    self->init();
 }
 
-void CommandAccelStepper::handleCommand(const char *command) {
-  #ifdef COMMANDACCELSTEPPER_DEBUG
-    Serial.print("Stepper received: ");
-    Serial.println(command);
-  #endif
+void CommandAccelStepper::init()
+{
+    #ifdef COMMANDACCELSTEPPER_DEBUG
+        Serial.println("Init CommandAccelStepper");
+    #endif
 
-  cmdHdl.processString(command);
+    //do device init first
+
+    //Register all commands.
+    //ALL OF THEM
+    cmdHdl.addCommand(BONJOUR_CMD, wrapper_bonjour);
+
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_SET_POSITION, wrapper_setCurrentPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_SET_SPEED, wrapper_setSpeed);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_SET_MAX_SPEED, wrapper_setMaxSpeed);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_SET_ACC, wrapper_setAcceleration);
+
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_ENABLE_ACC, wrapper_enableAcceleration);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_DISABLE_ACC, wrapper_disableAcceleration);
+
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVE_TO, wrapper_moveTo);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_MOVE, wrapper_move);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_STOP, wrapper_stop);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN,  wrapper_run);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_TO_POSITION, wrapper_runToPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_TO_NEW_POSITION, wrapper_runToNewPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_SPEED, wrapper_runSpeed);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_RUN_SPEED_TO_POSITION, wrapper_runSpeedToPosition);
+
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_DIST, wrapper_distanceToGo);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_TARGET, wrapper_targetPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_POSITION, wrapper_currentPosition);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_MOVING, wrapper_isMoving);
+
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_SPEED, wrapper_speed);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_MAXSPEED, wrapper_maxSpeed);
+    cmdHdl.addCommand(COMMANDACCELSTEPPER_REQUEST_ACCELERATION, wrapper_acceleration);
+
+    //Default one
+    cmdHdl.setDefaultHandler(wrapper_unrecognized);
 }
 
 /**
-* set Header for the message that come out of this guy
+* Handling messages
+* wrapper is used by CommandManager
 */
-void CommandAccelStepper::wrapper_setHeader(const char *cmdHeader, void* pt2Object) {
-  // explicitly cast to a pointer to Classname
-  CommandAccelStepper* self = (CommandAccelStepper*) pt2Object;
-  self->setHeader(cmdHeader);
+void CommandAccelStepper::wrapper_handleCommand(const char *command, void* pt2Object)
+{
+    //Each time the handleCommand is called, it is given the command and the pointer to the instance that should handle it
+    globalCommandAccelStepperPt2Object = pt2Object;
+    //Cast it to class name
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+
+    self->handleCommand(command);
 }
 
-void CommandAccelStepper::setHeader(const char *cmdHeader) {
-  #ifdef COMMANDACCELSTEPPER_DEBUG
-    Serial.println("Init CommandStepper");
-  #endif
+void CommandAccelStepper::handleCommand(const char *command)
+{
+    #ifdef COMMANDACCELSTEPPER_DEBUG
+        Serial.print("Device received: ");
+        Serial.println(command);
+    #endif
 
-  cmdHdl.setCmdHeader(cmdHeader);
+    cmdHdl.processString(command);
 }
 
 /**
-* update function to be run each loop
+* Set Header for the message that comes out of the Device
+* The wrapper is used by the CommandManager
 */
-void CommandAccelStepper::wrapper_update(void* pt2Object) {
-  // explicitly cast to a pointer to Classname
-  CommandAccelStepper* self = (CommandAccelStepper*) pt2Object;
-  self->update();
+void CommandAccelStepper::wrapper_setHeader(const char *cmdHeader, void* pt2Object)
+{
+    //Explicitly cast to a pointer to classname
+    CommandAccelStepper* self = (CommandAccelStepper*) pt2Object;
+    self->setHeader(cmdHeader);
 }
 
-void CommandAccelStepper::update() {
-  stepper.run();
+void CommandAccelStepper::setHeader(const char *cmdHeader)
+{
+    #ifdef COMMANDACCELSTEPPER_DEBUG
+        Serial.print("Set Header CommandAccelStepper to ");
+        Serial.println(cmdHeader);
+    #endif
+
+    cmdHdl.setCmdHeader(cmdHeader);
+}
+
+/**
+* Update function to be run each loop
+* The wrapper is used by the CommandManager
+*/
+void CommandAccelStepper::wrapper_update(void* pt2Object)
+{
+    //Cast to pointer of classname
+    CommandAccelStepper* self = (CommandAccelStepper*) pt2Object;
+    self->update();
 }
 
 /*
-* a bonjour behavior enable to know who we are talking to
-* change the COMMANDACCELSTEPPER_BONJOUR_ID and ensure it is unique to your new device
-* keep COMMANDACCELSTEPPER_BONJOUR_ID short
-* do not forget to change the name ofthis variable apropriately
+* BUGGED: DOES NOT REVERT DIRECTION APPROPRIATELY
+*/
+void CommandAccelStepper::update()
+{
+    if(accelerationEnabled)
+    {
+        stepper->run();
+    }
+    else
+    {
+        stepper->runSpeedToPosition();
+    }
+
+    if(stepper->distanceToGo() == 0)
+    {
+        moving = false;
+    }
+}
+
+/**
+* A Bonjour behaviour eenable to know who we are talking to
+* change the CommandAccelStepper_BONJOUR_ID  and ensure it is unique to your new device
+* keep CommandAccelStepper_BONJOUR_ID short
+* DONT FORGET TO CHANGE THE NAME OF THIS VARIABLE APPROPRIATELY!!
 */
 void CommandAccelStepper::wrapper_bonjour()
 {
-  // explicitly cast to a pointer to Classname
-  CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-  self->bonjour();
+    //Cast once more...
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->bonjour();
 }
 
-void CommandAccelStepper::bonjour() {
-  #ifdef COMMANDACCELSTEPPER_DEBUG
-    Serial.println("Device received bonjour command");
-  #endif
+void CommandAccelStepper::bonjour()
+{
+    #ifdef COMMANDACCELSTEPPER_DEBUG
+        Serial.println("Device received bonjour command");
+    #endif
 
-  cmdHdl.initCmd();
-  cmdHdl.addCmdString("BONJOUR");
-  cmdHdl.addCmdDelim();
-  cmdHdl.addCmdString(COMMANDACCELSTEPPER_BONJOUR_ID);
-  cmdHdl.addCmdTerm();
-  cmdHdl.sendCmdSerial();
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(BONJOUR_CMD);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_BONJOUR_ID);
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
 }
-
 
 /**
-* unrecognized command and wrapper
+* Default unrecognized command and wrapper
+* Respond a message with header "?" and the command received as the argument
 */
-void CommandAccelStepper::wrapper_unrecognized(const char *command) {
-  // explicitly cast to a pointer to Classname
-  CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-  self->unrecognized(command);
+void CommandAccelStepper::wrapper_unrecognized(const char *command)
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->unrecognized(command);
 }
 
-void CommandAccelStepper::unrecognized(const char *command) {
-  cmdHdl.initCmd();
-  cmdHdl.addCmdString("?");
-  cmdHdl.addCmdDelim();
-  cmdHdl.addCmdString(command);
-  cmdHdl.addCmdTerm();
-  cmdHdl.sendCmdSerial();
+void CommandAccelStepper::unrecognized(const char *command)
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(UNRECOGNIZED_CMD);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdString(command);
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
 }
 
-
-/**
-* move to command and wrapper
-*/
+//Moves the stepper to a specific location
 void CommandAccelStepper::wrapper_moveTo()
 {
-  // explicitly cast to a pointer to Classname
-  CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
-  self->moveTo();
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->moveTo();
 }
 
-void CommandAccelStepper::moveTo() {
-  #ifdef COMMANDACCELSTEPPER_DEBUG
-    Serial.println("Stepper received moveTo command");
-  #endif
+void CommandAccelStepper::moveTo()
+{
+    long steps = cmdHdl.readLongArg();
 
-  long nSteps = cmdHdl.readLongArg();
-  if (cmdHdl.argOk) {
-    #ifdef COMMANDACCELSTEPPER_DEBUG
-      Serial.print("nSteps: ");
-      Serial.println(nSteps);
-    #endif
-    stepper.moveTo(nSteps);
-  }
-  else {
-    #ifdef COMMANDACCELSTEPPER_DEBUG
-      Serial.println("No arguments");
-    #endif
-  }
+    if(cmdHdl.argOk)
+    {
+        stepper->moveTo(steps);
+        moving = true;
+
+        if(!accelerationEnabled)
+        {
+            stepper->setSpeed(lastSetSpeed);
+        }
+    }
 }
+
+//Moves the stepper x number of steps
+void CommandAccelStepper::wrapper_move()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->move();
+}
+
+void CommandAccelStepper::move()
+{
+    long steps = cmdHdl.readLongArg();
+
+    if(cmdHdl.argOk)
+    {
+        stepper->move(steps);
+        moving = true;
+
+        if(!accelerationEnabled)
+        {
+            stepper->setSpeed(lastSetSpeed);
+        }
+    }
+}
+
+//Polls the stepper and step it if a step is due. Uses accelerations/decellerations to achieve position
+void CommandAccelStepper::wrapper_run()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->run();
+}
+
+boolean CommandAccelStepper::run()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdBool(stepper->run());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Polls the stepper and stetp if a step is due. Uses constant speed as set by setSpeed()
+void CommandAccelStepper::wrapper_runSpeed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->runSpeed();
+}
+
+boolean CommandAccelStepper::runSpeed()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_SPEED);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdBool(stepper->runSpeed());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Sets the Maximum speed of the stepper
+void CommandAccelStepper::wrapper_setMaxSpeed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->setMaxSpeed();
+}
+
+void CommandAccelStepper::setMaxSpeed()
+{
+    float stepsPerSec = cmdHdl.readFloatArg();
+
+    if(cmdHdl.argOk)
+    {
+        stepper->setMaxSpeed(stepsPerSec);
+    }
+}
+
+//Returns the max speed of the stepper
+void CommandAccelStepper::wrapper_maxSpeed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->maxSpeed();
+}
+
+float CommandAccelStepper::maxSpeed()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_MAXSPEED);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdFloat(stepper->maxSpeed());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Sets the acceleration for the stepper
+void CommandAccelStepper::wrapper_setAcceleration()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->setAcceleration();
+}
+
+void CommandAccelStepper::setAcceleration()
+{
+    float stepsPerSecPerSec = cmdHdl.readFloatArg();
+
+    if(cmdHdl.argOk)
+    {
+        stepper->setAcceleration(stepsPerSecPerSec);
+    }
+}
+
+//Returns the acceleration of the stepper
+void CommandAccelStepper::wrapper_acceleration()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->acceleration();
+}
+
+float CommandAccelStepper::acceleration()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_ACCELERATION);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdFloat(stepper->acceleration());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//sets the speed of the stepper
+void CommandAccelStepper::wrapper_setSpeed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->setSpeed();
+}
+
+void CommandAccelStepper::setSpeed()
+{
+    float stepsPerSec = cmdHdl.readFloatArg();
+
+    if(cmdHdl.argOk)
+    {
+        lastSetSpeed = stepsPerSec;
+        stepper->setSpeed(lastSetSpeed);
+    }
+}
+
+//Returns the speed of the stepper
+void CommandAccelStepper::wrapper_speed()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->speed();
+}
+
+float CommandAccelStepper::speed()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_SPEED);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdFloat(stepper->speed());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Returns the distance between the target position and current posiiton
+void CommandAccelStepper::wrapper_distanceToGo()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->distanceToGo();
+}
+
+long CommandAccelStepper::distanceToGo()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_DIST);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdLong(stepper->distanceToGo());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//returns the most recently set target position#
+void CommandAccelStepper::wrapper_targetPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->targetPosition();
+}
+
+long CommandAccelStepper::targetPosition()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_TARGET);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdLong(stepper->targetPosition());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//returns the current stepper position
+void CommandAccelStepper::wrapper_currentPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->currentPosition();
+}
+
+long CommandAccelStepper::currentPosition()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_POSITION);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdLong(stepper->currentPosition());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Sets the current position of the stepper
+void CommandAccelStepper::wrapper_setCurrentPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->setCurrentPosition();
+}
+
+void CommandAccelStepper::setCurrentPosition()
+{
+    long steps = cmdHdl.readLongArg();
+    if(cmdHdl.argOk)
+    {
+        stepper->setCurrentPosition(steps);
+    }
+}
+
+//Moves the stepper (using acceleration) to the target position and blocks until it is there
+void CommandAccelStepper::wrapper_runToPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->runToPosition();
+}
+
+void CommandAccelStepper::runToPosition()
+{
+    /*
+    //TODO FIX
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_TO_POSITION);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+    */
+    stepper->runToPosition();
+}
+
+//moves the stepper at sleected speed until the target position
+void CommandAccelStepper::wrapper_runSpeedToPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->runSpeedToPosition();
+}
+
+boolean CommandAccelStepper::runSpeedToPosition()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_RUN_SPEED_TO_POSITION);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdBool(stepper->runSpeedToPosition());
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Moves the stepper (With acceleration) to the new target pos.
+void CommandAccelStepper::wrapper_runToNewPosition()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->runToNewPosition();
+}
+
+void CommandAccelStepper::runToNewPosition()
+{
+    long steps = cmdHdl.readLongArg();
+    if(cmdHdl.argOk)
+    {
+        stepper->runToNewPosition(steps);
+    }
+}
+
+//Stops the stepper as quickly as possible
+void CommandAccelStepper::wrapper_stop()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->stop();
+}
+
+boolean CommandAccelStepper::stop()
+{
+    stepper->stop();
+    return true;
+}
+
+/**********************NEW*******************************************/
+
+void CommandAccelStepper::wrapper_isMoving()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->isMoving();
+}
+
+boolean CommandAccelStepper::isMoving()
+{
+    cmdHdl.initCmd();
+    cmdHdl.addCmdString(COMMANDACCELSTEPPER_MOVING);
+    cmdHdl.addCmdDelim();
+    cmdHdl.addCmdBool(moving);
+    cmdHdl.addCmdTerm();
+    cmdHdl.sendCmdSerial();
+}
+
+//Enables acceleration
+void CommandAccelStepper::wrapper_enableAcceleration()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->enableAcceleration();
+}
+
+void CommandAccelStepper::enableAcceleration()
+{
+    accelerationEnabled = true;
+}
+
+//Disables acceleration
+void CommandAccelStepper::wrapper_disableAcceleration()
+{
+    CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
+    self->disableAcceleration();
+}
+
+void CommandAccelStepper::disableAcceleration()
+{
+    accelerationEnabled = false;
+}
+
+/************************************END********************************************/
