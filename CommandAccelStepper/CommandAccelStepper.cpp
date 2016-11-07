@@ -421,7 +421,6 @@ void CommandAccelStepper::wrapper_stop()
 void CommandAccelStepper::stop()
 {
     stepper->stop();
-    return true;
 }
 
 
