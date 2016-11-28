@@ -129,7 +129,7 @@ void CommandAccelStepper::wrapper_update(void* pt2Object)
 }
 
 /*
-* BUGGED: DOES NOT REVERT DIRECTION APPROPRIATELY
+* Update function: Called numerous times per second
 */
 void CommandAccelStepper::update()
 {
