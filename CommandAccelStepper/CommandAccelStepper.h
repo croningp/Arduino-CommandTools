@@ -56,6 +56,10 @@
 //Uncomment the next line to run library in debug mode (verbose messages)
 // #define COMMANDACCELSTEPPER_DEBUG
 
+/**
+* WARNING: Does not work in conjunction with multiple motors on RAMPSv1.4 shield.
+* Use CommandLinearAccelStepperActuator for RAMPS utility
+*/
 class CommandAccelStepper {
 public:
 
