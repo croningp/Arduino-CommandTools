@@ -31,27 +31,28 @@
 class CommandDallas
 {
 public:
-    CommandDallas(int, OneWire*);
+    CommandDallas(int);
 
     DallasTemperature dallasTemp;
     CommandHandler cmdHdl;
 
-    void registerToCommandManager(CommandMnager &cmdMgr, const char *command);
+    void registerToCommandManager(CommandManager &cmdMgr, const char *command);
     
     static void wrapper_init(void* obj);
     void init();
 
     static void wrapper_handleCommand(const char *command, void* obj);
-    void handleCOmmand(const char *command);
-
-    static void wrapper_seHeader(const char *command, coid* obj);
     void handleCommand(const char *command);
+
+    static void wrapper_setHeader(const char *command, void* obj);
+    void setHeader(const char *command);
 
     static void wrapper_update(void* obj);
     void update();
 
 private:
     typedef uint8_t DeviceAddress[8];
+    DeviceAddress device;
 
     static void wrapper_bonjour();
     void bonjour();
@@ -59,7 +60,7 @@ private:
     static void wrapper_unrecognized(const char *command);
     void unrecognized(const char *command);
 
-    static void wrapper celsius();
+    static void wrapper_celsius();
     void celsius();
 };
 

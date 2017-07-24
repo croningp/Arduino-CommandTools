@@ -33,7 +33,6 @@ void CommandDallas::init()
 
     // Register all commands
     cmdHdl.addCommand(BONJOUR_CMD, wrapper_bonjour);
-    cmdHdl.addCommand(COMMANDDALLAS_REQUEST_FAHRENHEIT, wrapper_fahrenheit);
     cmdHdl.addCommand(COMMANDDALLAS_REQUEST_CELSIUS, wrapper_celsius);
 
     // Default command
@@ -48,7 +47,7 @@ void CommandDallas::wrapper_handleCommand(const char *command, void* obj)
     self->handleCommand(command);
 }
 
-CommandDallas::handleCommand(const char *command)
+void CommandDallas::handleCommand(const char *command)
 {
     #ifdef COMMANDDALLAS_DEBUG
         Serial.printtln("Temp Received");
@@ -62,7 +61,7 @@ CommandDallas::handleCommand(const char *command)
 void CommandDallas::wrapper_setHeader(const char *cmdHeader, void* obj)
 {
     CommandDallas* self = (CommandDallas*) obj;
-    self->setHeader(cmdHeader)l
+    self->setHeader(cmdHeader);
 }
 
 void CommandDallas::setHeader(const char *cmdHeader)
@@ -90,7 +89,7 @@ Bonjour behaviour to know who we're talking to
 void CommandDallas::wrapper_bonjour()
 {
     CommandDallas* self = (CommandDallas*) globalCommandDallasPtr;
-    self->bonjour()
+    self->bonjour();
 }
 
 void CommandDallas::bonjour()
@@ -140,7 +139,7 @@ void CommandDallas::celsius()
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDDALLAS_REPORT_CELSIUS);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdString(dallasTemp.getTempC(DeviceAddress));
+    cmdHdl.addCmdFloat(dallasTemp.getTempC(device));
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
