@@ -31,10 +31,11 @@
 class CommandDallas
 {
 public:
-    CommandDallas(int);
+    CommandDallas(OneWire*, int);
 
     DallasTemperature dallasTemp;
     CommandHandler cmdHdl;
+    int deviceIndex;
 
     void registerToCommandManager(CommandManager &cmdMgr, const char *command);
     
@@ -51,8 +52,6 @@ public:
     void update();
 
 private:
-    typedef uint8_t DeviceAddress[8];
-    DeviceAddress device;
 
     static void wrapper_bonjour();
     void bonjour();

@@ -2,11 +2,11 @@
 
 void* globalCommandDallasPtr;
 
-CommandDallas::CommandDallas(int dataPin)
+CommandDallas::CommandDallas(OneWire* onewire, int myDeviceIndex)
 {
-    OneWire onewire(dataPin);
-    DallasTemperature myDallas(&onewire);
+    DallasTemperature myDallas(onewire);
     dallasTemp = myDallas;
+    deviceIndex = myDeviceIndex;
 }
 
 // Register to CommandManager
@@ -37,6 +37,8 @@ void CommandDallas::init()
 
     // Default command
     cmdHdl.setDefaultHandler(wrapper_unrecognized);
+
+    dallasTemp.begin();
 }
 
 // Messages are redirected ehre
@@ -136,10 +138,12 @@ void CommandDallas::celsius()
         Serial.println("Dallas received celsius command");
     #endif
 
+    dallasTemp.requestTemperaturesByIndex(deviceIndex);
+
     cmdHdl.initCmd();
     cmdHdl.addCmdString(COMMANDDALLAS_REPORT_CELSIUS);
     cmdHdl.addCmdDelim();
-    cmdHdl.addCmdFloat(dallasTemp.getTempC(device));
+    cmdHdl.addCmdFloat(dallasTemp.getTempCByIndex(deviceIndex));
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
