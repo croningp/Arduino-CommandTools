@@ -41,7 +41,7 @@ void CommandDallas::init()
     dallasTemp.begin();
 }
 
-// Messages are redirected ehre
+// Messages are redirected here
 void CommandDallas::wrapper_handleCommand(const char *command, void* obj)
 {
     globalCommandDallasPtr = obj;
@@ -147,5 +147,3 @@ void CommandDallas::celsius()
     cmdHdl.addCmdTerm();
     cmdHdl.sendCmdSerial();
 }
-
-// DS18B20
