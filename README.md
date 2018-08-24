@@ -38,9 +38,9 @@ Any symbolic link implementation for Windows is welcomed.
 
 The ```symlinks.py``` script comes from https://github.com/janelia-arduino/arduino-libraries
 
-## Author
+## Authors
 
-[Jonathan Grizou](http://jgrizou.com/) while working in the [CroninGroup](http://www.chem.gla.ac.uk/cronin/). 
+[Jonathan Grizou](http://jgrizou.com/) while working in the [Cronin Group](http://www.chem.gla.ac.uk/cronin/). 
 
 Contributions by [Graham Keenan](https://github.com/ShinRa26) and [Jean-Patrick Francoia](https://github.com/JPFrancoia).
 
