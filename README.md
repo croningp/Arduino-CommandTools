@@ -38,8 +38,12 @@ Any symbolic link implementation for Windows is welcomed.
 
 The ```symlinks.py``` script comes from https://github.com/janelia-arduino/arduino-libraries
 
+## Author
+
+[Jonathan Grizou](http://jgrizou.com/) while working in the [CroninGroup](http://www.chem.gla.ac.uk/cronin/). 
+
+Contributions by [Graham Keenan](https://github.com/ShinRa26) and [Jean-Patrick Francoia](https://github.com/JPFrancoia).
+
 ## License
 
-This code has been written by Jonathan Grizou while working in the CroninGroup.
-
-[![LGPL V3](http://www.gnu.org/graphics/lgplv3-147x51.png)](http://www.gnu.org/licenses/lgpl-3.0.en.html)
+[![GPL V3](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/licenses/gpl.html)
