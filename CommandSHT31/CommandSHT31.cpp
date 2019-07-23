@@ -57,7 +57,7 @@ void CommandSHT31::wrapper_handleCommand(const char *command, void* pt2Object) {
 
 void CommandSHT31::handleCommand(const char *command) {
   #ifdef COMMANDSHT31_DEBUG
-    Serial.print("Servo received: ");
+    Serial.print("SHT31 received: ");
     Serial.println(command);
   #endif
 
