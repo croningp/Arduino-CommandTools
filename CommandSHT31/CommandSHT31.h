@@ -1,5 +1,5 @@
-#ifndef CommandSHT1X_h
-#define CommandSHT1X_h
+#ifndef CommandSHT31_h
+#define CommandSHT31_h
 
 #if defined(WIRING) && WIRING >= 100
   #include <Wiring.h>

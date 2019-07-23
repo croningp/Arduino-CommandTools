@@ -1,5 +1,5 @@
 
-#include "CommandSHT31D.h"
+#include "CommandSHT31.h"
 
 void* globalCommandSHT31Pt2Object;
 
