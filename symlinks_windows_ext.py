@@ -22,41 +22,44 @@ USERDIR = os.path.expanduser('~')
 if platform.system() in ['Linux', 'Darwin']:
     LIBDIR = os.path.join(USERDIR, 'sketchbook', 'libraries')
 elif platform.system() == 'Windows':
-	LIBDIR = os.path.join(USERDIR, 'Documents', 'Arduino', 'libraries')
-    #Symlinks for windows
-	def symlink_ms(source, link_name):
-		import ctypes
-		csl = ctypes.windll.kernel32.CreateSymbolicLinkW
-		csl.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
-		csl.restype = ctypes.c_ubyte
-		flags = 1 if os.path.isdir(source) else 0
-		try:
-		    if csl(link_name, source.replace('/', '\\'), flags) == 0:
-		        raise ctypes.WinError()
-		except:
-		    pass
+    LIBDIR = os.path.join(USERDIR, 'Documents', 'Arduino', 'libraries')
+
+    def symlink_ms(source, link_name):
+        """ Symlinks for windows """
+        import ctypes
+        csl = ctypes.windll.kernel32.CreateSymbolicLinkW
+        csl.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
+        csl.restype = ctypes.c_ubyte
+        flags = 1 if os.path.isdir(source) else 0
+        try:
+            if csl(link_name, source.replace('/', '\\'), flags) == 0:
+                raise ctypes.WinError()
+        except WindowsError as e:
+            print(f"Symbolic link creation failed. The error is: {e}")
+        except:
+            pass
 
 
 def create_symlinks_windows():
-	if not os.path.isdir(LIBDIR):
-		print ('Libraries directory does not exist - creating...')
-		os.makedirs(LIBDIR)
+    if not os.path.isdir(LIBDIR):
+        print('Libraries directory does not exist - creating...')
+        os.makedirs(LIBDIR)
 
-	src_paths, dst_paths = get_paths()
-	for src, dst in zip(src_paths, dst_paths):
-		if os.path.exists(dst):
-			if not isLink(dst):
-				print ('{0} exists and in not a symbolic link - not overwriting'.format(dst))
-				continue
-			else:
-				print ('Unlinking {0}'.format(dst))
-				os.unlink(dst)
+    src_paths, dst_paths = get_paths()
+    for src, dst in zip(src_paths, dst_paths):
+        if os.path.exists(dst):
+            if not isLink(dst):
+                print('{0} exists and in not a symbolic link - not overwriting'.format(dst))
+                continue
+            else:
+                print('Unlinking {0}'.format(dst))
+                os.unlink(dst)
 
-		print('Creating new symbolic link {0}'.format(dst))
-		symlink_ms(src, dst)
+        print('Creating new symbolic link {0}'.format(dst))
+        symlink_ms(src, dst)
+
 
 def create_symlinks_unix():
-
     # Create library directory if it doesn't exist
     if not os.path.isdir(LIBDIR):
         print('libraries directory does not exist - creating')
@@ -78,7 +81,6 @@ def create_symlinks_unix():
 
 
 def remove_symlinks():
-
     if not os.path.isdir(LIBDIR):
         return
 
@@ -108,28 +110,29 @@ def get_paths():
             dst_paths.append(dst)
     return src_paths, dst_paths
 
-#For Windows only
+
+# For Windows only
 def isLink(path):
-	if os.path.exists(path):
-		if os.path.isdir(path):
-			FILE_ATTRIBUTE_REPARSE_POINT = 0x4000
-			attributes = ctypes.windll.kernel32.GetFileAttributesW(unicode(path))
-			return (attributes & FILE_ATTRIBUTE_REPARSE_POINT) > 0
-		else:
-			command = ['dir', path]
-			try:
-				with open(os.devnull, 'w') as NULL_FILE:
-					o0 = check_output(command, stderr=NULL_FILE, shell=True)
-			except CalledProcessError as e:
-				print e.check_output
-				return False
-			o1 = [s.strip() for s in o0.split('\n')]
-			if len(o1) < 6:
-				return False
-			else:
-				return 'SYMLINK' in o1[5]
-	else:
-		return False
+    if os.path.exists(path):
+        if os.path.isdir(path):
+            FILE_ATTRIBUTE_REPARSE_POINT = 0x4000
+            attributes = ctypes.windll.kernel32.GetFileAttributesW(unicode(path))
+            return (attributes & FILE_ATTRIBUTE_REPARSE_POINT) > 0
+        else:
+            command = ['dir', path]
+            try:
+                with open(os.devnull, 'w') as NULL_FILE:
+                    o0 = check_output(command, stderr=NULL_FILE, shell=True)
+            except CalledProcessError as e:
+                print(e.check_output)
+                return False
+            o1 = [s.strip() for s in o0.split('\n')]
+            if len(o1) < 6:
+                return False
+            else:
+                return 'SYMLINK' in o1[5]
+    else:
+        return False
 
 
 # -----------------------------------------------------------------------------
@@ -147,9 +150,14 @@ if __name__ == '__main__':
         sys.exit(1)
     args = parser.parse_args()
     if args.install:
-    	if platform.system() in ['Linux', 'Darwin']:
-        	create_symlinks_unix()
+        if platform.system() in ['Linux', 'Darwin']:
+            create_symlinks_unix()
         elif platform.system() == 'Windows':
-        	create_symlinks_windows()
+            import ctypes
+            if not ctypes.windll.shell32.IsUserAnAdmin():
+                # Re-run with admin privileges
+                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__+" -i", None, 1)
+            else:
+                create_symlinks_windows()
     elif args.remove:
         remove_symlinks()
