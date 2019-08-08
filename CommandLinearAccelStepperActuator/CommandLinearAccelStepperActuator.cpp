@@ -32,7 +32,7 @@ void CommandLinearAccelStepperActuator::init() {
     Serial.println("Init CommandLinearAccelStepperActuator");
   #endif
 
-  //do you device init fisrt
+  //do you device init first
   linearactuator.init();
 
   // here register all the commands
@@ -134,7 +134,7 @@ void CommandLinearAccelStepperActuator::update() {
 * a bonjour behavior enable to know who we are talking to
 * change the COMMANDLINEARACCELSTEPPER_BONJOUR_ID and ensure it is unique to your new device
 * keep COMMANDLINEARACCELSTEPPER_BONJOUR_ID short
-* do not forget to change the name ofthis variable apropriately
+* do not forget to change the name of this variable appropriately
 */
 void CommandLinearAccelStepperActuator::wrapper_bonjour()
 {
@@ -158,7 +158,7 @@ void CommandLinearAccelStepperActuator::bonjour() {
 
 /**
 * default unrecognized command and wrapper
-* respond a message with heade "?" and the command received as argument
+* respond a message with header "?" and the command received as argument
 */
 void CommandLinearAccelStepperActuator::wrapper_unrecognized(const char *command) {
   // explicitly cast to a pointer to Classname
