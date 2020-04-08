@@ -60,6 +60,9 @@ class CommandPCA9548A {
     static void wrapper_switch_channel();
     void switch_channel();
 
+    static void wrapper_get_channels();
+    void get_channels();
+
   private:
 
     static void wrapper_bonjour();

@@ -201,5 +201,42 @@ void CommandPCA9548A::switch_channel() {
   //Release the bus and detach interrupts so that other devices can use it
   Wire.end();
 
+}
+
+/**
+ Read MUX channels wrapper
+*/
+void CommandPCA9548A::wrapper_get_channels() {
+  // explicitly cast to a pointer to Classname
+  CommandPCA9548A* self = (CommandPCA9548A*) globalCommandPCA9548APt2Object;
+  self->get_channels();
+}
+
+/** Actual read MUX channels function
+ * Reads channels status byte from MUX and sends it over serial.
+ */
+void CommandPCA9548A::get_channels() {
+  #ifdef PCA9548A_DEBUG
+    Serial.println("PCA9548A get_channels()");
+  #endif
+
+  int channels_state;
+
+  Wire.begin();
+  Wire.beginTransmission(PCA9548A_I2C_ADDRESS);
+  Wire.requestFrom(PCA9548A_I2C_ADDRESS, 1);
+  while (! Wire.available()){};
+  channels_state = Wire.read();
+  Wire.endTransmission();
+  //Release the bus and detach interrupts so that other devices can use it
+  Wire.end();
+
+  // Construct command
+  cmdHdl.initCmd();
+  cmdHdl.addCmdString(COMMANDPCA9548A_READ_HEADER);
+  cmdHdl.addCmdDelim();
+  cmdHdl.addCmdInt(channels_state);
+  cmdHdl.addCmdTerm();
+  cmdHdl.sendCmdSerial();
 
 }
