@@ -7,6 +7,10 @@ CommandPCA9548A::CommandPCA9548A() {
   // constructor here
 }
 
+CommandPCA9548A::CommandPCA9548A(int address) {
+  PCA9548A_I2C_ADDRESS = address;
+}
+
 /**
 * register to a CommandManager
 */
@@ -223,11 +227,9 @@ void CommandPCA9548A::get_channels() {
   int channels_state;
 
   Wire.begin();
-  Wire.beginTransmission(PCA9548A_I2C_ADDRESS);
   Wire.requestFrom(PCA9548A_I2C_ADDRESS, 1);
-  while (! Wire.available()){};
+  //while (! Wire.available()){};
   channels_state = Wire.read();
-  Wire.endTransmission();
   //Release the bus and detach interrupts so that other devices can use it
   Wire.end();
 
