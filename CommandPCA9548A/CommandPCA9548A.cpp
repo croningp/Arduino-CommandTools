@@ -28,9 +28,6 @@ void CommandPCA9548A::wrapper_init(void* pt2Object) {
 void CommandPCA9548A::init() {
   #ifdef PCA9548A_DEBUG
     Serial.println("Init CommandPCA9548A");
-    // Slow down clock for the ease of debugging
-    // 40 Hz is reasonable enough
-    Wire.setClock(40);
   #endif
 
   // No device init needed
@@ -39,6 +36,8 @@ void CommandPCA9548A::init() {
   // the following is mandatory for the bonjour behavior
   cmdHdl.addCommand(BONJOUR_CMD, wrapper_bonjour);
   cmdHdl.addCommand(COMMANDPCA9548A_WRITE, wrapper_switch_channel);
+  cmdHdl.addCommand(COMMANDPCA9548A_READ, wrapper_get_channels);
+
 
   // the default unrecognized, keep it
   cmdHdl.setDefaultHandler(wrapper_unrecognized);
@@ -172,35 +171,27 @@ void CommandPCA9548A::switch_channel() {
     Serial.println("PCA9548A switch_channel()");
   #endif
 
-  // Read arguments from the command list
-  int i, channels[TOTAL_CHANNELS];
+  int i, ch_state;
   char *arg;
-  for (i=0; i < TOTAL_CHANNELS; i++){
+  char mask = 0;
+
+  // Read arguments from the command list & construct bitmask
+  for (i=0; i < MAX_CHANNELS; i++){
     arg = cmdHdl.next();
     // End of list or no arguments
     if (arg == NULL) break;
     // It's safer to keep channel off,
     // So map one to one, everything else to zero
-    channels[i] = (atoi(arg) == 1 ? 1 : 0);
+    ch_state = (atoi(arg) == 1 ? 1 : 0);
     #ifdef PCA9548A_DEBUG
-      Serial.print("PCA9548A got channel ");
-      Serial.print(i);
-      Serial.print(" set to ");
-      Serial.println(channels[i]);
+      Serial.print("PCA9548A setting channel ");
+      Serial.print(i+1);
+      Serial.print(" to ");
+      Serial.println(ch_state);
     #endif
+    //Construct mask
+    (ch_state == 1) ? (mask |= 1<<i) : (mask &= ~(1<<i));
   }
-  // Iterate over channels list and construct bitmask
-  char mask = 0;
-  for (i=0; i<sizeof(channels); i++){
-    //Channel has to be switched on
-    if (channels[i] == 1) mask |= 1<<i;
-    // Channel has to be switched off
-    if (channels[i] == 0) mask &= ~(1<<i);
-  }
-  #ifdef PCA9548A_DEBUG
-      Serial.print("PCA9548A constructed mask ");
-      Serial.println(mask, BIN);
-  #endif
 
   //Send mask to the device
   Wire.begin();

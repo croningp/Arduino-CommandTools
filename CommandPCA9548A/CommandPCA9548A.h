@@ -30,7 +30,7 @@
 
 // I2C address with all pull-ups low
 static const int PCA9548A_I2C_ADDRESS = 0x70;
-static const int TOTAL_CHANNELS = 8;
+static const int MAX_CHANNELS = 8;
 
 
 
