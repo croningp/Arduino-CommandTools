@@ -195,7 +195,7 @@ void CommandAccelStepper::unrecognized(const char *command)
     cmdHdl.sendCmdSerial();
 }
 
-//Moves the stepper to a specific location
+//Moves the stepper to a specific location  [i.e. ABSOLUTE MOVE]
 void CommandAccelStepper::wrapper_moveTo()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
@@ -218,7 +218,7 @@ void CommandAccelStepper::moveTo()
     }
 }
 
-//Moves the stepper x number of steps
+//Moves the stepper x number of steps [i.e. RELATIVE MOVE]
 void CommandAccelStepper::wrapper_move()
 {
     CommandAccelStepper* self = (CommandAccelStepper*) globalCommandAccelStepperPt2Object;
