@@ -42,7 +42,6 @@ void CommandPCA9548A::init() {
   cmdHdl.addCommand(COMMANDPCA9548A_WRITE, wrapper_switch_channel);
   cmdHdl.addCommand(COMMANDPCA9548A_READ, wrapper_get_channels);
 
-
   // the default unrecognized, keep it
   cmdHdl.setDefaultHandler(wrapper_unrecognized);
 }
@@ -166,37 +165,17 @@ void CommandPCA9548A::wrapper_switch_channel() {
 }
 
 /** Actual switch MUX channel function
- * Reads argument list from the command string as a list of up to TOTAL_CHANNELS bool values
- * Position in the list is channel number
- * Value 0 - channel has to be switched off, 1 - switched on
+ * Gets channels mask as a first argument and sends it to the device
  */
 void CommandPCA9548A::switch_channel() {
   #ifdef PCA9548A_DEBUG
     Serial.println("PCA9548A switch_channel()");
   #endif
 
-  int i, ch_state;
-  char *arg;
   char mask = 0;
 
-  // Read arguments from the command list & construct bitmask
-  for (i=0; i < MAX_CHANNELS; i++){
-    arg = cmdHdl.next();
-    // End of list or no arguments
-    if (arg == NULL) break;
-    // It's safer to keep channel off,
-    // So map one to one, everything else to zero
-    ch_state = (atoi(arg) == 1 ? 1 : 0);
-    #ifdef PCA9548A_DEBUG
-      Serial.print("PCA9548A setting channel ");
-      Serial.print(i+1);
-      Serial.print(" to ");
-      Serial.println(ch_state);
-    #endif
-    //Construct mask
-    (ch_state == 1) ? (mask |= 1<<i) : (mask &= ~(1<<i));
-  }
-
+  // Get mask from argument
+  mask = cmdHdl.readIntArg();
   //Send mask to the device
   Wire.begin();
   Wire.beginTransmission(PCA9548A_I2C_ADDRESS);
