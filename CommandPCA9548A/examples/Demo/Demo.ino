@@ -22,10 +22,9 @@ void loop()
 
 
 /** To test try switching the channels on the mux on or off:
- * MUX,W,1,1,1; // Would switch channels 1,2 and 3 on
- * MUX,W,1,1,1,0,0,0,0,0; // Same as above
- * MUX,W,0,0,1,1; //Would switch channels 1&2 off and 3&4 on
- * MUX,W,0,0,0,0,0,0,0,0; //Would switch all channels off
- * MUX,W,1,1,1,1,1,1,1,1; Would switch all channels off
+ * MUX,W,1; // Would switch channel 1 on
+ * MUX,W,0 // Would switch all channels off
+ * MUX,W,2; //Would switch channel2 on (bin(2) == 00000010)
+ * MUX,W,21; //Would switch channels 1,3 and 5 on (bin(21) == 00010101)
  **/
 
