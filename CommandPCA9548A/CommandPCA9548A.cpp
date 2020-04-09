@@ -34,7 +34,7 @@ void CommandPCA9548A::init() {
     Serial.println("Init CommandPCA9548A");
   #endif
 
-  // No device init needed
+  Wire.begin();
 
   // here register all the commands
   // the following is mandatory for the bonjour behavior
@@ -177,12 +177,10 @@ void CommandPCA9548A::switch_channel() {
   // Get mask from argument
   mask = cmdHdl.readIntArg();
   //Send mask to the device
-  Wire.begin();
   Wire.beginTransmission(PCA9548A_I2C_ADDRESS);
   Wire.write(mask);
   Wire.endTransmission();
   //Release the bus and detach interrupts so that other devices can use it
-  Wire.end();
 
 }
 
@@ -205,12 +203,10 @@ void CommandPCA9548A::get_channels() {
 
   int channels_state;
 
-  Wire.begin();
   Wire.requestFrom(PCA9548A_I2C_ADDRESS, 1);
   //while (! Wire.available()){};
   channels_state = Wire.read();
   //Release the bus and detach interrupts so that other devices can use it
-  Wire.end();
 
   // Construct command
   cmdHdl.initCmd();
