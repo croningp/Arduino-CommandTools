@@ -116,7 +116,10 @@ def isLink(path):
     if os.path.exists(path):
         if os.path.isdir(path):
             FILE_ATTRIBUTE_REPARSE_POINT = 0x4000
-            attributes = ctypes.windll.kernel32.GetFileAttributesW(unicode(path))
+            if sys.version_info[0] < 3:
+                attributes = ctypes.windll.kernel32.GetFileAttributesW(unicode(path))
+            else:
+                attributes = ctypes.windll.kernel32.GetFileAttributesW(path)
             return (attributes & FILE_ATTRIBUTE_REPARSE_POINT) > 0
         else:
             command = ['dir', path]
