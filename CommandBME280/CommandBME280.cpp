@@ -224,7 +224,7 @@ void CommandBME280::wrapper_humidity()
 {
     // explicitly cast to a pointer to Classname
     CommandBME280 *self = (CommandBME280 *)globalCommandBME280Pt2Object;
-    self->temperature();
+    self->humidity();
 }
 
 void CommandBME280::humidity()

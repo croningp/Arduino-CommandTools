@@ -17,7 +17,7 @@ void setup()
     Serial.begin(115200);
     
     // Register device to the Manager
-    cmdbme280.registerToCommandManager(cmdMgr, "RP");
+    cmdbme280.registerToCommandManager(cmdMgr, "BME280");
 
   cmdMgr.init();
 }
