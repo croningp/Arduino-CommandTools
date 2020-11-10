@@ -224,12 +224,6 @@ void CommandMAX31865::read_temp() {
     uint16_t fault = 0x02;
   };
 
-  // std::string faultStr = std::to_string(fault);
-
-  // Serial.println(COMMANDMAX31865_READ_HEADER);
-  // Serial.println(fault);
-  // Serial.println((char*)fault);
-
   // construct command
   cmdHdl.initCmd();
   cmdHdl.addCmdString(COMMANDMAX31865_READ_HEADER);
